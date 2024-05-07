@@ -7,7 +7,7 @@ import math
 pygame.init()
 
 boardSize = 300
-playerSpread = (boardSize/2) - round(boardSize/10)
+playerSpread = round((boardSize/2) - (boardSize/10))
 screen = pygame.display.set_mode((boardSize, boardSize))
 clock = pygame.time.Clock()
 running = True
@@ -16,7 +16,7 @@ fps = 60
 playerNum = 20
 playerList = {}
 infDist = round(boardSize/10)
-infCheckTime = 0.5 # A player that is infected will only check for other infected player near by once every this seconds.  
+infCheckTime = 1 # A player that is infected will only check for other infected player near by once every this seconds.  
 
 infStatus = False # Initial infection status for all players
 
