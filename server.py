@@ -8,6 +8,7 @@ screen = pygame.display.set_mode((boardSize, boardSize))
 clock = pygame.time.Clock()
 running = True
 playerList = {}
+websocketPlayerID = {}
 
 screen.fill("white")
 pygame.display.flip()
@@ -36,20 +37,26 @@ async def echo(websocket, path):
                 playerStats[1] = 0
                 
             playerList[playerName] = playerStats
+            websocketPlayerID[websocket] = playerName
             
             screen.fill("white")
+            font = pygame.font.Font(None, 35)
             
             for name, stats in playerList.items():
                 
                 playerInfStatus = stats[2]
                 if playerInfStatus == True:
                     colour = "Red"
+                    status = ":("
                 else:
                     colour = "green"
+                    status = ":)"
                     
                 playerPos = [stats[0],stats[1]]
+                text_surface = font.render(status, True, "black")
+                text_rect = text_surface.get_rect(center=playerPos)
                 pygame.draw.circle(screen, colour, playerPos, 20)
-
+                screen.blit(text_surface, text_rect)
             pygame.display.flip()
 
             await websocket.send(str(playerList))

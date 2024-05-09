@@ -1,5 +1,6 @@
 import threading
 import subprocess
+import time
 
 def run_script(script_name):
     subprocess.run(["python", script_name])
@@ -11,6 +12,7 @@ if __name__ == "__main__":
     script4_thread = threading.Thread(target=run_script, args=("roboclient2.py",))
 
     script1_thread.start()
+    time.sleep(0.5)
     script2_thread.start()
     script3_thread.start()
     script4_thread.start()
