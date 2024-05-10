@@ -11,12 +11,12 @@ clock = pygame.time.Clock()
 running = True
 playerList = {}
 
-walls = [pygame.Rect(0, 0, 10, boardHeight), # Left border
-         pygame.Rect(0, 0, boardWidth, 10), # Top border
-         pygame.Rect(boardWidth - 10, 0, 10, boardHeight), # Right border
-         pygame.Rect(0, boardHeight - 10, boardWidth, 10),
+walls = [pygame.Rect(-40, -40, 50, boardHeight+40), # Left border
+         pygame.Rect(-40, -40, boardWidth+40, 50), # Top border
+         pygame.Rect(boardWidth - 10, 0, 50, boardHeight), # Right border
+         pygame.Rect(-40, boardHeight - 10, boardWidth+40, 50), # Bottom border
          pygame.Rect((boardWidth/2)-100, 0 - 10, 200, 200),
-         pygame.Rect((boardWidth/2)-100, boardHeight - 200, 200, 200)] # Bottom border
+         pygame.Rect((boardWidth/2)-100, boardHeight - 200, 200, 200)]
 
 screen.fill("white")
 pygame.display.flip()
