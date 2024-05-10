@@ -2,15 +2,17 @@ import pygame
 import asyncio
 import websockets
 import InfectionLogic1 as infLog
+import random
 
 pygame.init()
-uiSize = 300
+uiSize = 150
 uiSizeHalf = uiSize/2
+boardSize = 500 # This needs to match the board size on the server.  I could set up a web socket to pull this number from the server script but i really dont want to!  
 screen = pygame.display.set_mode((uiSize, uiSize))
 clock = pygame.time.Clock()
 dt = 0
 
-playerPos = pygame.Vector2(250, 250)
+playerPos = pygame.Vector2(375+random.randint(-300,300), 250+random.randint(-200,200))
 playerInfo = {}
 playerName = infLog.playerName
 infStatus = infLog.infStatus
@@ -22,6 +24,7 @@ async def interlinked():
     async with websockets.connect(uri) as websocket:
         global infStatus
         global counter
+        global playerPos
         running = True
         upCol = "gray"
         downCol = "gray"
@@ -33,48 +36,21 @@ async def interlinked():
                     running = False
 
             screen.fill("purple")
-            pygame.draw.circle(screen, upCol, (uiSizeHalf,uiSizeHalf-75), 20) # up arrow
-            pygame.draw.circle(screen, downCol, (uiSizeHalf,uiSizeHalf+75), 20) # down arrow
-            pygame.draw.circle(screen, leftCol, (uiSizeHalf-75,uiSizeHalf), 20) # left arrow
-            pygame.draw.circle(screen, rightCol, (uiSizeHalf+75,uiSizeHalf), 20) # right arrow
             
             if infStatus == False:
                 status = "Healthy :)"
             else:
                 status = "Infected!"
             
-            font = pygame.font.Font(None, 35)
+            font = pygame.font.Font(None, 27)
             text_surface = font.render(status, True, "white")
             text_rect = text_surface.get_rect(center=(uiSizeHalf,uiSizeHalf))
             screen.blit(text_surface, text_rect)
-
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_UP]:
-                playerPos.y -= 300 * dt
-                upCol = "blue"
-            else:
-                upCol = "gray"
-            if keys[pygame.K_DOWN]:
-                playerPos.y += 300 * dt
-                downCol= "blue"
-            else:
-                downCol = "gray"
-            if keys[pygame.K_LEFT]:
-                playerPos.x -= 300 * dt
-                leftCol = "blue"
-            else:
-                leftCol = "gray"
-            if keys[pygame.K_RIGHT]:
-                playerPos.x += 300 * dt
-                rightCol = "blue"
-            else:
-                rightCol = "gray"
-                
-            if keys[pygame.K_i]:
-                infStatus = True
-                
-            if keys[pygame.K_u]:
-                infStatus = False
+            
+            xOffset = random.randint(-1,1) * 15
+            yOffset = random.randint(-1,1) * 15
+            playerPos.x += xOffset
+            playerPos.y += yOffset
 
             pygame.display.flip()
             
@@ -84,6 +60,8 @@ async def interlinked():
             
             response = await websocket.recv()
             playerList = eval(response)
+            playerStats = playerList[playerName]
+            playerPos = pygame.Vector2(playerStats[0],playerStats[1])
             
             infStatus, counter = infLog.infectionLogicDef(playerList, counter)
         

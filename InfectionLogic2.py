@@ -1,7 +1,7 @@
 import math
 import random
 
-playerName = "K. Dot"
+playerName = "Robo-Client 2000"
 infCheckTime = 2
 infDist = 75
 counter = 12
