@@ -1,22 +1,29 @@
 import asyncio
 import websockets
 import pygame
+import random
 
 pygame.init()
+pygame.display.set_caption('SNEIS - Simulation with Numerous Entities, Infection Spread')
 boardWidth = 750
 boardHeight = 500
-playerRadii = 20
+playerRadii = 15
 screen = pygame.display.set_mode((boardWidth, boardHeight))
 clock = pygame.time.Clock()
 running = True
 playerList = {}
 
 walls = [pygame.Rect(-40, -40, 50, boardHeight+40), # Left border
-         pygame.Rect(-40, -40, boardWidth+40, 50), # Top border
-         pygame.Rect(boardWidth - 10, 0, 50, boardHeight), # Right border
-         pygame.Rect(-40, boardHeight - 10, boardWidth+40, 50), # Bottom border
-         pygame.Rect((boardWidth/2)-100, 0 - 10, 200, 200),
-         pygame.Rect((boardWidth/2)-100, boardHeight - 200, 200, 200)]
+        pygame.Rect(-40, -40, boardWidth+40, 50), # Top border
+        pygame.Rect(boardWidth - 10, 0, 50, boardHeight), # Right border
+        pygame.Rect(-40, boardHeight - 10, boardWidth+40, 50), # Bottom border
+         
+        pygame.Rect(400, 0, 125, 175),
+        pygame.Rect(125, boardHeight - 150, 100, 200),
+        pygame.Rect(115, 0, 75, 225),
+        pygame.Rect(125, 185, 150, 40),
+        pygame.Rect(475, boardHeight - 250, 150, 150),
+        pygame.Rect(475, boardHeight - 250, 400, 50)]
 
 screen.fill("white")
 pygame.display.flip()
@@ -39,7 +46,7 @@ async def echo(websocket, path):
             
             
             screen.fill("white")
-            font = pygame.font.Font(None, 20)         
+            font = pygame.font.Font(None, playerRadii)         
             for wall in walls:
                 pygame.draw.rect(screen, "blue", wall)
             
@@ -58,6 +65,7 @@ async def echo(websocket, path):
                             playerStats[1] = wall.top - playerRadii
                         else:
                             playerStats[1] = wall.bottom + playerRadii
+
 
             playerList[playerName] = playerStats
             

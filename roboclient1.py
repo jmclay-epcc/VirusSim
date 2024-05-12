@@ -47,8 +47,8 @@ async def interlinked():
             text_rect = text_surface.get_rect(center=(uiSizeHalf,uiSizeHalf))
             screen.blit(text_surface, text_rect)
             
-            xOffset = random.randint(-1,1) * 0
-            yOffset = random.randint(-1,1) * 0
+            xOffset = random.randint(-1,1) * 5
+            yOffset = random.randint(-1,1) * 5
             playerPos.x += xOffset
             playerPos.y += yOffset
 
