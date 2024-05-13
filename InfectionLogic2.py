@@ -2,32 +2,56 @@ import math
 import random
 
 playerName = "Robo-Client 2000"
-infCheckTime = 2
-infDist = 75
-counter = 12
-infStatus = False
+evoDist = 30
+evoStatus = 1
+hand = random.randint(1,3)
+handTypes = ["Rock","Paper","Scissors"]
+dontInteract = ""
 
-def infectionLogicDef(playerList, counter):
+def infectionLogicDef(playerList):
     
     playerStats = playerList[playerName]
     playerPos = (playerStats[0],playerStats[1])
-    infStatus = playerStats[2]
+    evoStatus = playerStats[2]
     
-    if infStatus == False and counter >= (infCheckTime * 30):
-        # The next chuck of script to see how close every other player in the dictionary is to current player, and then determines if current player can and should be infected by them.  I find it quite confusing - for loops inside for loops.  
-        for nthPlayer, nthStats in playerList.items(): # Loop through the dicationary again
-            if nthPlayer != playerName: # We're only interested in the players that AREN'T current player, eg the "nth player". 
-                nthPosX = nthStats[0] # Pulls out nth players stats...
-                nthPosY = nthStats[1]
-                nthInfStatus = nthStats[2]
-                dist = math.hypot((playerPos[0]-nthPosX),(playerPos[1]-nthPosY)) # Calculates the distance between current player and nth player.  
-                if dist < infDist and nthInfStatus == True: # If its less than some predefined infection distance, and nth player is infected, then bingo the magic can happen.  
-                    print("I AM IN DANGER OF BEING INFECTED!")
-                    infOdds = random.randint(0,infDist) # We generate a new random number between 0 and whatever the predefined infection distance is... 
-                    if dist < infOdds: # ...and use it to calculate if current player is infected by nth player.  If the distance between current and nth is very large, then the odds are that infOdds will be smaller than it, and thus current player is less likely to be infected.  Likewise, if the distance is very small, its more likely that infOdds will be larger than it, making infection more likely.  This corresponds to the behaviour we want; small distance = more likely to be infected, large distance = less likely.  
-                        infStatus = True
-        counter = 0
-    elif infStatus == False:
-        counter += 1
-        
-    return infStatus, counter
+    global hand
+    global dontInteract
+    
+    for nthPlayer, nthStats in playerList.items(): # Loop through the list of players
+        if nthPlayer != playerName: # We're only interested in the players that AREN'T current player, eg the "nth player". 
+            nthPosX = nthStats[0] # Pulls out nth players stats...
+            nthPosY = nthStats[1]
+            nthEvoStatus = nthStats[2]
+            nthHand = nthStats[3]
+            dist = math.hypot((playerPos[0]-nthPosX),(playerPos[1]-nthPosY)) # Calculates the distance between current player and nth player.  
+            if dist < evoDist and nthEvoStatus == evoStatus and nthPlayer != dontInteract and evoStatus != 5: # If its less than some predefined infection distance, and nth player is infected, then bingo the magic can happen.  
+                print("----------",playerName,"----------")
+                if (hand == 1 and nthHand == 3) or (hand == 2 and nthHand == 1) or (hand == 3 and nthHand == 2):
+                    evoStatus += 1
+                    print("You threw a ",handTypes[hand-1],", and your opponent threw",handTypes[nthHand-1],".  You win!")
+                    if evoStatus == 5:
+                        print("You have reached level 5 - peak evolution!")
+                    else:
+                        print("You have evolved to level ",evoStatus)
+                    dontInteract = nthPlayer
+                elif (hand == 1 and nthHand == 2) or (hand == 2 and nthHand == 3) or (hand == 3 and nthHand == 1):
+                    evoStatus -= 1
+                    print("You threw a ",handTypes[hand-1],", and your opponent threw",handTypes[nthHand-1],".  You lose!")
+                    if evoStatus == 0:
+                        evoStatus = 1
+                        print("You can't fall any lower!")
+                    else:
+                        print("You have de-evolved to level ",evoStatus,".  Sad!")
+                    dontInteract = nthPlayer
+                elif hand == nthHand:
+                    print("You both threw ",handTypes[hand-1],".  Its a draw!")
+                    dontInteract = nthPlayer
+            elif dist < evoDist and nthEvoStatus == evoStatus  and nthPlayer != dontInteract and evoStatus == 5:
+                print("----------",playerName,"----------")
+                print("You're both perfect and cannot evolve any further!")
+                dontInteract = nthPlayer
+            if dist > evoDist and nthPlayer == dontInteract:
+                dontInteract = ""
+                hand = random.randint(1,3)
+                            
+    return evoStatus, hand

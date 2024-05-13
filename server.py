@@ -4,7 +4,7 @@ import pygame
 import random
 
 pygame.init()
-pygame.display.set_caption('SNEIS - Simulation with Numerous Entities, Infection Spread')
+pygame.display.set_caption('Multi-infstatus modification')
 boardWidth = 750
 boardHeight = 500
 playerRadii = 15
@@ -71,13 +71,17 @@ async def echo(websocket, path):
             
             for name, stats in playerList.items():
                 
-                playerInfStatus = stats[2]
-                if playerInfStatus == True:
+                playerEvoStatus = stats[2]
+                if playerEvoStatus == 1:
                     colour = "Red"
-                    status = ":("
-                else:
-                    colour = "green"
-                    status = ":)"
+                elif playerEvoStatus == 2:
+                    colour = "Orange"
+                elif playerEvoStatus == 3:
+                    colour = "Yellow"
+                elif playerEvoStatus == 4:
+                    colour = "Green"
+                elif playerEvoStatus == 5:
+                    colour = "Blue"
                     
                 playerPos = [stats[0],stats[1]]
                 text_surface = font.render(name, True, "black")

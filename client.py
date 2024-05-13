@@ -14,16 +14,16 @@ dt = 0
 playerPos = pygame.Vector2(375+random.randint(-300,300), 250+random.randint(-200,200))
 playerInfo = {}
 playerName = infLog.playerName
-infStatus = infLog.infStatus
-counter = infLog.counter
+evoStatus = infLog.evoStatus
+hand = infLog.hand
 
 uri = "ws://localhost:8765"
 
 async def interlinked():
     async with websockets.connect(uri) as websocket:
-        global infStatus
-        global counter
+        global evoStatus
         global playerPos
+        global hand
         running = True
         upCol = "gray"
         downCol = "gray"
@@ -40,10 +40,16 @@ async def interlinked():
             pygame.draw.circle(screen, leftCol, (uiSizeHalf-75,uiSizeHalf), 20) # left arrow
             pygame.draw.circle(screen, rightCol, (uiSizeHalf+75,uiSizeHalf), 20) # right arrow
             
-            if infStatus == False:
-                status = "Healthy :)"
-            else:
-                status = "Infected!"
+            if evoStatus == 1:
+                status = "Pion"
+            elif evoStatus == 2:
+                status = "Serf"
+            elif evoStatus == 3:
+                status = "Apprentice"
+            elif evoStatus == 4:
+                status = "Master"
+            elif evoStatus == 5:
+                status = "King"
             
             font = pygame.font.Font(None, 27)
             text_surface = font.render(status, True, "white")
@@ -71,10 +77,21 @@ async def interlinked():
                 rightCol = "blue"
             else:
                 rightCol = "gray"
+                
+            if keys[pygame.K_1]: # Debug controls, can be deleted/commented out later.  We don't want the players being able to manually change their status.  
+                evoStatus = 1
+            if keys[pygame.K_2]:
+                evoStatus = 2
+            if keys[pygame.K_3]:
+                evoStatus = 3
+            if keys[pygame.K_4]:
+                evoStatus = 4
+            if keys[pygame.K_5]:
+                evoStatus = 5
 
             pygame.display.flip()
             
-            playerInfo[playerName] = [playerPos.x,playerPos.y,infStatus]
+            playerInfo[playerName] = [playerPos.x,playerPos.y,evoStatus,hand]
 
             await websocket.send(str(playerInfo))
             
@@ -83,7 +100,7 @@ async def interlinked():
             playerStats = playerList[playerName]
             playerPos = pygame.Vector2(playerStats[0],playerStats[1])
             
-            infStatus, counter = infLog.infectionLogicDef(playerList, counter)
+            evoStatus, hand = infLog.infectionLogicDef(playerList)
         
             dt = clock.tick(30) / 1000
 
