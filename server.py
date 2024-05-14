@@ -12,6 +12,7 @@ screen = pygame.display.set_mode((boardWidth, boardHeight))
 clock = pygame.time.Clock()
 running = True
 playerList = {}
+websocketDict = {}
 
 walls = [pygame.Rect(-40, -40, 50, boardHeight+40), # Left border
         pygame.Rect(-40, -40, boardWidth+40, 50), # Top border
@@ -87,8 +88,11 @@ async def echo(websocket, path):
             pygame.display.flip()
 
             await websocket.send(str(playerList))
-    except websockets.exceptions.ConnectionClosedError:
-        print("Client disconnected")
+    except Exception as e:
+        print("Client error - ",e)
+        errorPlayer = websocketDict[websocket]
+        del playerList[errorPlayer]
+        print("Client Disconnected")
 
 async def main():
     # Start the WebSocket server on localhost at port 8765
