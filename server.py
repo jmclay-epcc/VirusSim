@@ -4,7 +4,7 @@ import pygame
 import random
 
 pygame.init()
-pygame.display.set_caption('SNEIS - Simulation with Numerous Entities, Infection Spread')
+pygame.display.set_caption('SNEESS - Simulation with Numerous Entities, Emulating Sickness Spread')
 boardWidth = 750
 boardHeight = 500
 playerRadii = 15
@@ -45,7 +45,6 @@ async def echo(websocket, path):
             messageDict = eval(message)
             playerName, playerStats = next(iter(messageDict.items()))
             
-            
             screen.fill("white")
             font = pygame.font.Font(None, playerRadii)         
             for wall in walls:
@@ -72,7 +71,6 @@ async def echo(websocket, path):
             websocketDict[websocket] = playerName
             
             for name, stats in playerList.items():
-                
                 playerInfStatus = stats[2]
                 if playerInfStatus == True:
                     colour = "Red"
@@ -94,16 +92,26 @@ async def echo(websocket, path):
         errorPlayer = websocketDict[websocket]
         del playerList[errorPlayer]
         print("Client Disconnected")
-
+            
 async def main():
     # Start the WebSocket server on localhost at port 8765
     async with websockets.serve(echo, "localhost", 8765):
         print("WebSocket server started on ws://localhost:8765")
         # Keep the event loop running indefinitely
         while running:
+            global walls
+            global playerList
+            
+            if playerList == {}: # We want some game events to always run, even when no one is connected to the server.  So, when playerList is empty, we run this very stripped down version of the game code that just prints the background and the walls, and refreshes the page every frame.  
+                    
+                screen.fill("white")        
+                for wall in walls:
+                    pygame.draw.rect(screen, "blue", wall)
+                pygame.display.flip()
+            
             await asyncio.sleep(0.01)  # Sleep briefly to allow other tasks to run
             pygame.event.pump()  # Manually handle Pygame events
-            clock.tick(30)
+            clock.tick(60)
 
 # Run the main coroutine
 asyncio.run(main())
