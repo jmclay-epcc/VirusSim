@@ -8,7 +8,7 @@ pygame.init()
 uiSize = 150
 uiSizeHalf = uiSize/2
 boardSize = 500 # This needs to match the board size on the server.  I could set up a web socket to pull this number from the server script but i really dont want to!  
-screen = pygame.display.set_mode((uiSize, uiSize))
+screen = pygame.display.set_mode((uiSize+150, uiSize))
 clock = pygame.time.Clock()
 dt = 0
 
@@ -17,6 +17,7 @@ playerInfo = {}
 playerName = infLog.playerName
 infStatus = infLog.infStatus
 counter = infLog.counter
+virus = infLog.virus
 
 uri = "ws://localhost:8765"
 
@@ -25,6 +26,7 @@ async def interlinked():
         global infStatus
         global counter
         global playerPos
+        global virus
         running = True
         upCol = "gray"
         downCol = "gray"
@@ -40,13 +42,13 @@ async def interlinked():
             if infStatus == False:
                 status = "Healthy :)"
             else:
-                status = "Infected!"
+                status = "Infected with " + virus
             
             font = pygame.font.Font(None, 27)
             text_surface = font.render(status, True, "white")
-            text_rect = text_surface.get_rect(center=(uiSizeHalf,uiSizeHalf))
+            text_rect = text_surface.get_rect(center=(uiSizeHalf+75,uiSizeHalf))
             screen.blit(text_surface, text_rect)
-
+            
             xOffset = random.randint(-1,1) * 5
             yOffset = random.randint(-1,1) * 5
             playerPos.x += xOffset
@@ -54,7 +56,7 @@ async def interlinked():
 
             pygame.display.flip()
             
-            playerInfo[playerName] = [playerPos.x,playerPos.y,infStatus]
+            playerInfo[playerName] = [playerPos.x,playerPos.y,infStatus,virus]
 
             await websocket.send(str(playerInfo))
             
@@ -63,7 +65,7 @@ async def interlinked():
             playerStats = playerList[playerName]
             playerPos = pygame.Vector2(playerStats[0],playerStats[1])
             
-            infStatus, counter = infLog.infectionLogicDef(playerList, counter)
+            infStatus, virus, counter = infLog.infectionLogicDef(playerList, counter)
         
             dt = clock.tick(30) / 1000
 

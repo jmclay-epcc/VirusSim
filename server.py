@@ -1,10 +1,8 @@
 import asyncio
 import websockets
 import pygame
-import random
 
 pygame.init()
-pygame.display.set_caption('SNEESS - Simulation with Numerous Entities, Emulating Sickness Spread')
 boardWidth = 750
 boardHeight = 500
 playerRadii = 15
@@ -66,14 +64,31 @@ async def echo(websocket, path):
                         else:
                             playerStats[1] = wall.bottom + playerRadii
 
-
             playerList[playerName] = playerStats
             websocketDict[websocket] = playerName
             
             for name, stats in playerList.items():
                 playerInfStatus = stats[2]
+                playerVirus = stats[3]
+                virusStringified = list(playerVirus)
+                virusIntefied = 0
+                
+                if len(virusStringified) == 0:
+                    gMod = 0
+                    rMod = 0
+                else:
+                    for i in virusStringified: # The purpose of this for loop is to turn convert the name of a virus into a number, which we can then use to modify the colour of the infected player.  This means that we can easily ("easily") tell what virus a player has by looking at it.  
+                        virusIntefied += ord(i)
+                    number_str = str(virusIntefied)
+                    first_two_digits = int(number_str[:2])
+                    last_two_digits = int(number_str[-2:])
+                    if last_two_digits < 10:
+                        last_two_digits = 69 # Can you possibly tell this is the point i became frustrated with this part of the program?
+                    gMod = 100 * (10/first_two_digits)
+                    rMod = 255 - (75 * (10/last_two_digits))
+                    
                 if playerInfStatus == True:
-                    colour = "Red"
+                    colour = (rMod,gMod,0)
                     status = ":("
                 else:
                     colour = "green"
@@ -111,7 +126,7 @@ async def main():
             
             await asyncio.sleep(0.01)  # Sleep briefly to allow other tasks to run
             pygame.event.pump()  # Manually handle Pygame events
-            clock.tick(60)
+            clock.tick(40)
 
 # Run the main coroutine
 asyncio.run(main())
