@@ -69,6 +69,7 @@ async def echo(websocket, path):
 
 
             playerList[playerName] = playerStats
+            websocketDict[websocket] = playerName
             
             for name, stats in playerList.items():
                 
