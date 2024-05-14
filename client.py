@@ -41,15 +41,15 @@ async def interlinked():
             pygame.draw.circle(screen, rightCol, (uiSizeHalf+75,uiSizeHalf), 20) # right arrow
             
             if evoStatus == 1:
-                status = "Pion"
+                status = "Worm"
             elif evoStatus == 2:
-                status = "Serf"
+                status = "Fish"
             elif evoStatus == 3:
-                status = "Apprentice"
+                status = "Newt"
             elif evoStatus == 4:
-                status = "Master"
+                status = "Rat"
             elif evoStatus == 5:
-                status = "King"
+                status = "Monkey"
             
             font = pygame.font.Font(None, 27)
             text_surface = font.render(status, True, "white")

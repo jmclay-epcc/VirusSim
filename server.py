@@ -8,10 +8,11 @@ pygame.display.set_caption('Multi-infstatus modification')
 boardWidth = 750
 boardHeight = 500
 playerRadii = 15
-screen = pygame.display.set_mode((boardWidth, boardHeight))
+screen = pygame.display.set_mode((boardWidth+500, boardHeight))
 clock = pygame.time.Clock()
 running = True
 playerList = {}
+websocketDict = {}
 
 walls = [pygame.Rect(-40, -40, 50, boardHeight+40), # Left border
         pygame.Rect(-40, -40, boardWidth+40, 50), # Top border
@@ -23,7 +24,7 @@ walls = [pygame.Rect(-40, -40, 50, boardHeight+40), # Left border
         pygame.Rect(115, 0, 75, 225),
         pygame.Rect(125, 185, 150, 40),
         pygame.Rect(475, boardHeight - 250, 150, 150),
-        pygame.Rect(475, boardHeight - 250, 400, 50)]
+        pygame.Rect(475, boardHeight - 250, 300, 50)]
 
 screen.fill("white")
 pygame.display.flip()
@@ -43,7 +44,6 @@ async def echo(websocket, path):
             message = await websocket.recv()
             messageDict = eval(message)
             playerName, playerStats = next(iter(messageDict.items()))
-            
             
             screen.fill("white")
             font = pygame.font.Font(None, playerRadii)         
@@ -68,6 +68,7 @@ async def echo(websocket, path):
 
 
             playerList[playerName] = playerStats
+            websocketDict[websocket] = playerName
             
             for name, stats in playerList.items():
                 
@@ -91,8 +92,11 @@ async def echo(websocket, path):
             pygame.display.flip()
 
             await websocket.send(str(playerList))
-    except websockets.exceptions.ConnectionClosedError:
-        print("Client disconnected")
+    except Exception as e:
+        print("Client error - ",e)
+        errorPlayer = websocketDict[websocket]
+        del playerList[errorPlayer]
+        print("Client Disconnected")
 
 async def main():
     # Start the WebSocket server on localhost at port 8765
