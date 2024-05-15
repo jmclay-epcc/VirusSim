@@ -36,7 +36,7 @@ def infectionLogicDef(playerList, counter):
                         infStatus = True
                         virus = nthVirus
                         infDist = nthInfDist
-                        print("You've been infected with",virus,"!")
+                        print("You've been infected with",virus,"!  This virus has a range of",infDist)
         counter = 0
     elif infStatus == False:
         counter += 1

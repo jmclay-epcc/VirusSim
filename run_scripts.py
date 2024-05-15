@@ -10,16 +10,19 @@ if __name__ == "__main__":
     script2_thread = threading.Thread(target=run_script, args=("client.py",))
     script3_thread = threading.Thread(target=run_script, args=("roboclient1.py",))
     script4_thread = threading.Thread(target=run_script, args=("roboclient2.py",))
+    script5_thread = threading.Thread(target=run_script, args=("client2.py",))
 
     script1_thread.start()
     time.sleep(0.5)
     script2_thread.start()
     script3_thread.start()
     script4_thread.start()
+    script5_thread.start()
 
     script1_thread.join()
     script2_thread.join()
     script3_thread.join()
     script4_thread.join()
+    script5_thread.join()
 
     print("Scripts have finished executing.")
