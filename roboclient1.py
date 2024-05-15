@@ -15,18 +15,22 @@ dt = 0
 playerPos = pygame.Vector2(375+random.randint(-300,300), 250+random.randint(-200,200))
 playerInfo = {}
 playerName = infLog.playerName
-infStatus = infLog.infStatus
 counter = infLog.counter
+
+infStatus = infLog.infStatus
 virus = infLog.virus
+infDist = infLog.infDist
 
 uri = "ws://localhost:8765"
 
 async def interlinked():
     async with websockets.connect(uri) as websocket:
-        global infStatus
         global counter
         global playerPos
+        
+        global infStatus
         global virus
+        global infDist
         running = True
         upCol = "gray"
         downCol = "gray"
@@ -42,7 +46,7 @@ async def interlinked():
             if infStatus == False:
                 status = "Healthy :)"
             else:
-                status = "Infected with " + virus
+                status = str(infDist)
             
             font = pygame.font.Font(None, 27)
             text_surface = font.render(status, True, "white")
@@ -56,7 +60,7 @@ async def interlinked():
 
             pygame.display.flip()
             
-            playerInfo[playerName] = [playerPos.x,playerPos.y,infStatus,virus]
+            playerInfo[playerName] = [playerPos.x,playerPos.y,infStatus,virus, infDist]
 
             await websocket.send(str(playerInfo))
             
@@ -65,7 +69,7 @@ async def interlinked():
             playerStats = playerList[playerName]
             playerPos = pygame.Vector2(playerStats[0],playerStats[1])
             
-            infStatus, virus, counter = infLog.infectionLogicDef(playerList, counter)
+            infStatus, virus, infDist, counter = infLog.infectionLogicDef(playerList, counter)
         
             dt = clock.tick(30) / 1000
 
