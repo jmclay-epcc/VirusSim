@@ -7,7 +7,7 @@ counter = 12
 
 infStatus = True
 virus = "Brain-rot"
-infDist = 50
+infDist = 100
 
 def infectionLogicDef(playerList, counter):
     

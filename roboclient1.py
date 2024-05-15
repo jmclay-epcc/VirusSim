@@ -46,7 +46,7 @@ async def interlinked():
             if infStatus == False:
                 status = "Healthy :)"
             else:
-                status = str(infDist)
+                status = "Infected!"
             
             font = pygame.font.Font(None, 27)
             text_surface = font.render(status, True, "white")
