@@ -5,8 +5,8 @@ playerName = "Robo-Client 2000"
 infCheckTime = 2
 counter = 12
 
-infStatus = True
-virus = "Brain-rot"
+infStatus = False
+virus = "Retrograde Toenails"
 infDist = 100
 
 def infectionLogicDef(playerList, counter):

@@ -10,7 +10,7 @@ if __name__ == "__main__":
     script2_thread = threading.Thread(target=run_script, args=("client.py",))
     script3_thread = threading.Thread(target=run_script, args=("roboclient1.py",))
     script4_thread = threading.Thread(target=run_script, args=("roboclient2.py",))
-    script5_thread = threading.Thread(target=run_script, args=("client2.py",))
+    script5_thread = threading.Thread(target=run_script, args=("roboclient3.py",))
 
     script1_thread.start()
     time.sleep(0.5)

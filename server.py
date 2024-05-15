@@ -1,6 +1,7 @@
 import asyncio
 import websockets
 import pygame
+import random
 
 pygame.init()
 boardWidth = 750
@@ -35,9 +36,6 @@ async def echo(websocket, path):
         global playerRadii
         global playerList
         while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
             
             message = await websocket.recv()
             messageDict = eval(message)
@@ -82,16 +80,22 @@ async def echo(websocket, path):
                     number_str = str(virusIntefied)
                     first_two_digits = int(number_str[:2])
                     last_two_digits = int(number_str[-2:])
-                    if last_two_digits < 10:
-                        last_two_digits = 69 # Can you possibly tell this is the point i became frustrated with this part of the program?
-                    gMod = 100 * (10/first_two_digits)
-                    rMod = 255 - (75 * (10/last_two_digits))
-                    
+                    if last_two_digits < 6:
+                        last_two_digits = 99 # The last two digits of the virus name seed can be between 00 and 09.  If this is the case, then the 10/last_two_digits fraction can produce a number greater than 1, which is not so bad in most cases, but it still something i'd like to avoid.  
+                    if virusIntefied == 1998: # Players that manage to stumble on a virus name that translates to 1998 - the year i was born - are automatically awarded a special dot colour.  According to a quick program i wrote, the only two words in the entire english dictionary that meet this criteria are "ventrocystorrhaphy" and "unostentatiousness".  And despite my initial excitment, "ventrocystorrhaphy" is a medical procedure, not a disease.  There are a HUGE number of combinations of two words (with a space) that equal 1998. 
+                        rMod = 255
+                        gMod = 153
+                        bMod = 255
+                    else:
+                        rMod = 255 - (30 * (10/last_two_digits))
+                        gMod = 150 * (10/first_two_digits)
+                        bMod = 125 * (10/last_two_digits)
+                
                 if playerInfStatus == True:
-                    colour = (rMod,gMod,0)
+                    colour = (rMod,gMod,bMod)
                     status = ":("
                 else:
-                    colour = "green"
+                    colour = "Green"
                     status = ":)"
                     
                 playerPos = [stats[0],stats[1]]
@@ -113,15 +117,24 @@ async def main():
     async with websockets.serve(echo, "localhost", 8765):
         print("WebSocket server started on ws://localhost:8765")
         # Keep the event loop running indefinitely
+        global running
         while running:
             global walls
             global playerList
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
             
             if playerList == {}: # We want some game events to always run, even when no one is connected to the server.  So, when playerList is empty, we run this very stripped down version of the game code that just prints the background and the walls, and refreshes the page every frame.  
                     
                 screen.fill("white")        
                 for wall in walls:
                     pygame.draw.rect(screen, "blue", wall)
+                    
+                font = pygame.font.Font(None, 40)     
+                text_surface = font.render("No players connected...", True, "black")
+                text_rect = text_surface.get_rect(center=((boardWidth/2)+80,(boardHeight/2)-43))
+                screen.blit(text_surface, text_rect)
                 pygame.display.flip()
             
             await asyncio.sleep(0.01)  # Sleep briefly to allow other tasks to run

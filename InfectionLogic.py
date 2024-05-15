@@ -6,8 +6,8 @@ infCheckTime = 2
 counter = 12
 
 infStatus = False
-virus = ""
-infDist = 0
+virus = "Shrinking Sickness"
+infDist = 100
 
 def infectionLogicDef(playerList, counter):
     

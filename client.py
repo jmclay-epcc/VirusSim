@@ -20,6 +20,7 @@ infStatus = infLog.infStatus
 virus = infLog.virus
 infDist = infLog.infDist
 
+pygame.display.set_caption(playerName)
 uri = "ws://localhost:8765"
 
 async def interlinked():

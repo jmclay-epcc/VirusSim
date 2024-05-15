@@ -1,12 +1,12 @@
 import math
 import random
 
-playerName = "Alexander Macfarlane"
+playerName = "Robo-Client 3000"
 infCheckTime = 2
 counter = 12
 
-infStatus = True
-virus = "Super-Crabs"
+infStatus = False
+virus = "Bonitus"
 infDist = 75
 
 def infectionLogicDef(playerList, counter):
