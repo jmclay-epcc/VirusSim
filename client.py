@@ -19,6 +19,7 @@ counter = infLog.counter
 infStatus = infLog.infStatus
 virus = infLog.virus
 infDist = infLog.infDist
+infStrength = infLog.infStrength
 
 pygame.display.set_caption(playerName)
 uri = "ws://localhost:8765"
@@ -31,6 +32,7 @@ async def interlinked():
         global infStatus
         global virus
         global infDist
+        global infStrength
         running = True
         upCol = "gray"
         downCol = "gray"
@@ -78,10 +80,15 @@ async def interlinked():
                 rightCol = "blue"
             else:
                 rightCol = "gray"
+                
+            xOffset = random.randint(-1,1) * 5
+            yOffset = random.randint(-1,1) * 5
+            playerPos.x += xOffset
+            playerPos.y += yOffset
 
             pygame.display.flip()
             
-            playerInfo[playerName] = [playerPos.x,playerPos.y,infStatus,virus, infDist]
+            playerInfo[playerName] = [playerPos.x,playerPos.y,infStatus,virus,infDist,infStrength]
 
             await websocket.send(str(playerInfo))
             
@@ -91,7 +98,7 @@ async def interlinked():
             playerPos = pygame.Vector2(playerStats[0],playerStats[1])
             virus = playerStats[3]
             
-            infStatus, virus, infDist,counter = infLog.infectionLogicDef(playerList, counter)
+            infStatus, virus, infDist,infStrength,counter = infLog.infectionLogicDef(playerList, counter)
         
             dt = clock.tick(30) / 1000
 

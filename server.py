@@ -61,6 +61,10 @@ async def echo(websocket, path):
                             playerStats[1] = wall.top - playerRadii
                         else:
                             playerStats[1] = wall.bottom + playerRadii
+                            
+            if playerStats[0] < 0 or playerStats[0] > boardWidth or playerStats[1] < 0 or playerStats[1] > boardHeight: # This if statement is basically an idiot-check to make sure that any players that randomly spawn inside a wall such that they get bumped outside of the map get stuck back into the map.  In theory this does not cover every case where a player can be put somewhere they should't be - they can, for example, get wedged between two walls and spend eternity getting bumped from one to the other between frames.  If this happens to a player, then the player can bloody well just quit and rejoin because i CANNOT figured out how to automatically catch this.   
+                playerStats[0] = pygame.Vector2((boardWidth/2)+random.randint(-50,50))
+                playerStats[1] = pygame.Vector2((boardHeight/2)+random.randint(-50,50))
 
             playerList[playerName] = playerStats
             websocketDict[websocket] = playerName
