@@ -2,14 +2,14 @@ import math
 import random
 import numpy as np
 
-playerName = "3"
+playerName = "5"
 infCheckTime = 2
 counter = 12
 
 infStatus = False
-virus = "Mega-Covid"
+virus = "Shrinking Sickness"
 infDist = 200 # This is a distance in units.  I think the unit is a pixel?  
-infStrength = 100 # This is a percentage.  
+infStrength = 20 # This is a percentage.  
 
 def infectionLogicDef(playerList, counter):
     
