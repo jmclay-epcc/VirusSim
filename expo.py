@@ -1,34 +1,45 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.widgets import Slider
 
-M = 1000 # Max infectious range
-I = 0.2 # Infection strength
+fig, ax = plt.subplots()
+plt.subplots_adjust(left=0.1, bottom=0.35)
 
-def sigmoid(x,M,I):
-    k = ((np.square(I-0.5)/1.25) + 0.05) * (150/M)
-    x0 = (0.8*M*(I)) + 0.1*M
-    return 100 / (1 + np.exp(k*(x-x0)))
+ax.set_xlim([0, 300])
+ax.set_ylim([0, 105])
 
-# Generate X values from -10 to 10
-X = np.linspace(0, M, M+1)
-
-# Calculate Y values using the sigmoid function
-Y1 = sigmoid(X,M,0)
-Y2 = sigmoid(X,M,0.25)
-Y3 = sigmoid(X,M,0.5)
-Y4 = sigmoid(X,M,0.75)
-Y5 = sigmoid(X,M,1)
-Y = sigmoid(X,M,I)
-
-# Plot the graph
-plt.plot(X, Y1, color="Red")
-plt.plot(X, Y2, color="Blue")
-plt.plot(X, Y3, color="Green")
-plt.plot(X, Y4, color="Yellow")
-plt.plot(X, Y5, color="Purple")
-plt.plot(X, Y, color="Black")
 plt.xlabel('Distance from infected player (unit)')
 plt.ylabel('Chance of being infected (%)')
 plt.title('Infection chance curves')
 plt.grid(True)
+
+M = 100
+I = 0.5
+X = np.linspace(0, M, M+1)
+k = ((np.square(I-0.5)/1.25) + 0.05) * (150/M)
+x0 = (0.8*M*(I)) + 0.1*M
+Y =  100 / (1 + np.exp(k*(X-x0)))
+
+line, = ax.plot(X, Y, lw=2, color="purple")
+
+axMaxRange = plt.axes([0.25, 0.2, 0.6, 0.03])
+sMaxRange = Slider(axMaxRange, 'Infectious Range', 0.1, 300.0, valinit=M)
+
+axInfStrength = plt.axes([0.25, 0.05, 0.6, 0.03])
+sInfStrength = Slider(axInfStrength, 'Infection Strength', 0.001, 1.0, valinit=I)
+
+def update(val):
+    M = int(sMaxRange.val)
+    I = sInfStrength.val
+    X = np.linspace(0, M, M+1)
+    k = ((np.square(I-0.5)/1.25) + 0.05) * (150/M)
+    x0 = (0.8*M*(I)) + 0.1*M
+    Y =  100 / (1 + np.exp(k*(X-x0)))
+    line.set_data(X, Y)
+    ax.autoscale_view()
+    fig.canvas.draw_idle()
+
+sMaxRange.on_changed(update)
+sInfStrength.on_changed(update)
+
 plt.show()
