@@ -3,13 +3,13 @@ import asyncio
 import websockets
 import InfectionLogic as infLog
 import random
+import json
 
 pygame.init()
 uiSize = 300
 uiSizeHalf = uiSize/2
 screen = pygame.display.set_mode((uiSize, uiSize+50))
 clock = pygame.time.Clock()
-dt = 0
 
 playerPos = pygame.Vector2(375+random.randint(-300,300), 250+random.randint(-200,200))
 playerInfo = {}
@@ -61,46 +61,39 @@ async def interlinked():
 
             keys = pygame.key.get_pressed()
             if keys[pygame.K_UP]:
-                playerPos.y -= 300 * dt
+                playerPos.y -= 5
                 upCol = "blue"
             else:
                 upCol = "gray"
             if keys[pygame.K_DOWN]:
-                playerPos.y += 300 * dt
+                playerPos.y += 5
                 downCol= "blue"
             else:
                 downCol = "gray"
             if keys[pygame.K_LEFT]:
-                playerPos.x -= 300 * dt
+                playerPos.x -= 5
                 leftCol = "blue"
             else:
                 leftCol = "gray"
             if keys[pygame.K_RIGHT]:
-                playerPos.x += 300 * dt
+                playerPos.x += 5
                 rightCol = "blue"
             else:
                 rightCol = "gray"
-                
-            xOffset = random.randint(-1,1) * 5
-            yOffset = random.randint(-1,1) * 5
-            playerPos.x += xOffset
-            playerPos.y += yOffset
 
             pygame.display.flip()
             
             playerInfo[playerName] = [playerPos.x,playerPos.y,infStatus,virus,infDist,infStrength]
 
-            await websocket.send(str(playerInfo))
+            await websocket.send(json.dumps(playerInfo))
             
             response = await websocket.recv()
-            playerList = eval(response)
+            playerList = json.loads(response)
             playerStats = playerList[playerName]
             playerPos = pygame.Vector2(playerStats[0],playerStats[1])
             virus = playerStats[3]
             
             infStatus, virus, infDist,infStrength,counter = infLog.infectionLogicDef(playerList, counter)
-        
-            dt = clock.tick(30) / 1000
 
         pygame.quit()
 
