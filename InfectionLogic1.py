@@ -2,7 +2,7 @@ import math
 import random
 import numpy as np
 
-playerName = "Jeff"
+playerName = "Steph"
 infCheckTime = 2
 counter = 12
 

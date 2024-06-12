@@ -3,13 +3,13 @@ import random
 import numpy as np
 
 playerName = "James Mclay"
-infCheckTime = 2
-counter = 12
-
 infStatus = True
 virus = "Shrinking Sickness"
 infDist = 200 # This is a distance in units.  I think the unit is a pixel?  
 infStrength = 20 # This is a percentage.  
+
+infCheckTime = 2
+counter = 12
 
 def infectionLogicDef(playerList, counter):
     

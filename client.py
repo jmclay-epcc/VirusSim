@@ -28,7 +28,6 @@ async def interlinked():
     async with websockets.connect(uri) as websocket:
         global counter
         global playerPos
-        
         global infStatus
         global virus
         global infDist
@@ -91,7 +90,6 @@ async def interlinked():
             playerList = json.loads(response)
             playerStats = playerList[playerName]
             playerPos = pygame.Vector2(playerStats[0],playerStats[1])
-            virus = playerStats[3]
             
             infStatus, virus, infDist,infStrength,counter = infLog.infectionLogicDef(playerList, counter)
 
