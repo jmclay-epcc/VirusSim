@@ -5,8 +5,8 @@ import InfectionLogic as infLog
 import json
 
 pygame.init()
-boardWidth = 750
-boardHeight = 500
+boardWidth = 1000
+boardHeight = 750
 playerRadii = 15
 screen = pygame.display.set_mode((boardWidth, boardHeight))
 clock = pygame.time.Clock()
@@ -14,19 +14,19 @@ running = True
 dt = 0
 
 dummyPlayerInfo = {}
-dummyPlayerInfo["Display1234567890"] = [] # This is an intentionally odd username to minimise the chance of a player picking it.  
+dummyPlayerInfo["Display1234567890"] = [] # This is an intentionally odd username to minimise the chance of a user picking it.  Even if they did it wouldn't crash the server - the user would just not be included in playerList, and so wouldn't be able to interact with anyone or be displayed on the map.  
 
 walls = [pygame.Rect(-40, -40, 50, boardHeight+40), # Left border
         pygame.Rect(-40, -40, boardWidth+40, 50), # Top border
         pygame.Rect(boardWidth - 10, 0, 50, boardHeight), # Right border
         pygame.Rect(-40, boardHeight - 10, boardWidth+40, 50), # Bottom border
          
-        pygame.Rect(400, 0, 125, 175),
-        pygame.Rect(125, boardHeight - 150, 100, 200),
-        pygame.Rect(115, 0, 75, 225),
-        pygame.Rect(125, 185, 150, 40),
-        pygame.Rect(475, boardHeight - 250, 150, 150),
-        pygame.Rect(475, boardHeight - 250, 400, 50)]
+        pygame.Rect(boardWidth - 300, 0, 125, 175),
+        pygame.Rect(boardWidth - 800, boardHeight - 150, 100, 200),
+        pygame.Rect(boardWidth - 700, 0, 75, 225),
+        pygame.Rect(boardWidth - 800, 185, 150, 40),
+        pygame.Rect(boardWidth - 400, boardHeight - 250, 150, 150),
+        pygame.Rect(boardWidth - 400, boardHeight - 250, 400, 50)]
 
 uri = "ws://localhost:8765"
 

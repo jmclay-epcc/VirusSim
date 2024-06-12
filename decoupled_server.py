@@ -4,8 +4,8 @@ import pygame
 import random
 import json
 
-boardWidth = 750
-boardHeight = 500
+boardWidth = 1000
+boardHeight = 750
 playerRadii = 15
 clock = pygame.time.Clock()
 playerList = {}
@@ -16,12 +16,12 @@ walls = [pygame.Rect(-40, -40, 50, boardHeight+40), # Left border
         pygame.Rect(boardWidth - 10, 0, 50, boardHeight), # Right border
         pygame.Rect(-40, boardHeight - 10, boardWidth+40, 50), # Bottom border
          
-        pygame.Rect(400, 0, 125, 175),
-        pygame.Rect(125, boardHeight - 150, 100, 200),
-        pygame.Rect(115, 0, 75, 225),
-        pygame.Rect(125, 185, 150, 40),
-        pygame.Rect(475, boardHeight - 250, 150, 150),
-        pygame.Rect(475, boardHeight - 250, 400, 50)]
+        pygame.Rect(boardWidth - 300, 0, 125, 175),
+        pygame.Rect(boardWidth - 800, boardHeight - 150, 100, 200),
+        pygame.Rect(boardWidth - 700, 0, 75, 225),
+        pygame.Rect(boardWidth - 800, 185, 150, 40),
+        pygame.Rect(boardWidth - 400, boardHeight - 250, 150, 150),
+        pygame.Rect(boardWidth - 400, boardHeight - 250, 400, 50)]
 
 
 async def echo(websocket, path):
@@ -36,7 +36,7 @@ async def echo(websocket, path):
             messageDict = json.loads(message)
             playerName, playerStats = next(iter(messageDict.items()))
             
-            if playerName != "Display1234567890": # This is an intentionally odd username to minimise the chance of a player picking it.  
+            if playerName != "Display1234567890": # This is an intentionally odd username to minimise the chance of a player picking it.  We don't want the display client to be put on playerList, because it isn't a player, so we filter it out by checking for its specific username.  
                 playerList[playerName] = playerStats
                 websocketDict[websocket] = playerName
                 
@@ -57,8 +57,8 @@ async def echo(websocket, path):
                                 playerStats[1] = wall.bottom + playerRadii
                             
                 if playerStats[0] < 0 or playerStats[0] > boardWidth or playerStats[1] < 0 or playerStats[1] > boardHeight: # This if statement is basically an idiot-check to make sure that any players that randomly spawn inside a wall such that they get bumped outside of the map get stuck back into the map.  In theory this does not cover every case where a player can be put somewhere they should't be - they can, for example, get wedged between two walls and spend eternity getting bumped from one to the other between frames.  If this happens to a player, then the player can bloody well just quit and rejoin because i CANNOT figured out how to automatically catch this.   
-                    playerStats[0] = pygame.Vector2((boardWidth/2)+random.randint(-50,50))
-                    playerStats[1] = pygame.Vector2((boardHeight/2)+random.randint(-50,50))
+                    playerStats[0] = (boardWidth/2)+int(random.randint(-boardWidth,boardWidth)/2)
+                    playerStats[1] = (boardWidth/2)+int(random.randint(-boardHeight,boardHeight)/2)
 
             await asyncio.sleep(1/60)
             await websocket.send(json.dumps(playerList))

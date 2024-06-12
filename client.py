@@ -4,6 +4,7 @@ import websockets
 import InfectionLogic as infLog
 import random
 import json
+import math
 
 pygame.init()
 uiSize = 300
@@ -11,7 +12,7 @@ uiSizeHalf = uiSize/2
 screen = pygame.display.set_mode((uiSize, uiSize+50))
 clock = pygame.time.Clock()
 
-playerPos = pygame.Vector2(375+random.randint(-300,300), 250+random.randint(-200,200))
+playerPos = [-1000,random.randint(-1000,1000)]
 playerInfo = {}
 playerName = infLog.playerName
 counter = infLog.counter
@@ -59,37 +60,44 @@ async def interlinked():
             screen.blit(text_surface, text_rect)
 
             keys = pygame.key.get_pressed()
-            if keys[pygame.K_UP]:
-                playerPos.y -= 7
-                upCol = "blue"
+            
+            baseStep = 10 # As is probably quite clear, the player moves by making a step along the X axis, Y axis, or box axis, each frame.  If this step was constant, then the player would end up moving a greater distance when travelling diagonally (if they player held down up and left, the player would move 10 pixels up, 10 left, and ultimately about 14 diagonally).  We want the player to make the same sized step every frame regardless of direction, so we correct the step size based on what keys are being held down here.  
+            if sum(keys) == 2: # Thats a long way of saying im using pythagoras to make sure the player always moves the same distance per frame regardless of direction.  
+                step = math.sqrt((baseStep*baseStep)/2) 
             else:
-                upCol = "gray"
-            if keys[pygame.K_DOWN]:
-                playerPos.y += 7
-                downCol= "blue"
-            else:
-                downCol = "gray"
+                step = baseStep
+            
             if keys[pygame.K_LEFT]:
-                playerPos.x -= 7
+                playerPos[0] -= step
                 leftCol = "blue"
             else:
                 leftCol = "gray"
             if keys[pygame.K_RIGHT]:
-                playerPos.x += 7
+                playerPos[0] += step
                 rightCol = "blue"
             else:
                 rightCol = "gray"
+            if keys[pygame.K_UP]:
+                playerPos[1] -= step
+                upCol = "blue"
+            else:
+                upCol = "gray"
+            if keys[pygame.K_DOWN]:
+                playerPos[1] += step
+                downCol= "blue"
+            else:
+                downCol = "gray"
 
             pygame.display.flip()
             
-            playerInfo[playerName] = [playerPos.x,playerPos.y,infStatus,virus,infDist,infStrength]
+            playerInfo[playerName] = [playerPos[0],playerPos[1],infStatus,virus,infDist,infStrength]
 
             await websocket.send(json.dumps(playerInfo))
             
             response = await websocket.recv()
             playerList = json.loads(response)
             playerStats = playerList[playerName]
-            playerPos = pygame.Vector2(playerStats[0],playerStats[1])
+            playerPos = [playerStats[0],playerStats[1]]
             
             infStatus, virus, infDist,infStrength,counter = infLog.infectionLogicDef(playerList, counter)
 

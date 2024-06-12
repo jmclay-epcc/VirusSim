@@ -12,7 +12,7 @@ screen = pygame.display.set_mode((uiSize+150, uiSize))
 clock = pygame.time.Clock()
 dt = 0
 
-playerPos = pygame.Vector2(375+random.randint(-300,300), 250+random.randint(-200,200))
+playerPos = [-1000,random.randint(-1000,1000)]
 playerInfo = {}
 playerName = infLog.playerName
 counter = infLog.counter
@@ -57,19 +57,19 @@ async def interlinked():
 
             xOffset = random.randint(-1,1) * 7
             yOffset = random.randint(-1,1) * 7
-            playerPos.x += xOffset
-            playerPos.y += yOffset
+            playerPos[0] += xOffset
+            playerPos[1] += yOffset
 
             pygame.display.flip()
             
-            playerInfo[playerName] = [playerPos.x,playerPos.y,infStatus,virus,infDist,infStrength]
+            playerInfo[playerName] = [playerPos[0],playerPos[1],infStatus,virus,infDist,infStrength]
 
             await websocket.send(json.dumps(playerInfo))
             
             response = await websocket.recv()
             playerList = json.loads(response)
             playerStats = playerList[playerName]
-            playerPos = pygame.Vector2(playerStats[0],playerStats[1])
+            playerPos = [playerStats[0],playerStats[1]]
             
             infStatus, virus, infDist,infStrength,counter = infLog.infectionLogicDef(playerList, counter)
 
