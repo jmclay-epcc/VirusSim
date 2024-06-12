@@ -8,7 +8,6 @@ import json
 pygame.init()
 uiSize = 150
 uiSizeHalf = uiSize/2
-boardSize = 500 # This needs to match the board size on the server.  I could set up a web socket to pull this number from the server script but i really dont want to!  
 screen = pygame.display.set_mode((uiSize+150, uiSize))
 clock = pygame.time.Clock()
 dt = 0
