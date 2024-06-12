@@ -60,7 +60,7 @@ async def echo(websocket, path):
                     playerStats[0] = pygame.Vector2((boardWidth/2)+random.randint(-50,50))
                     playerStats[1] = pygame.Vector2((boardHeight/2)+random.randint(-50,50))
 
-            await asyncio.sleep(1/120)
+            await asyncio.sleep(1/60)
             await websocket.send(json.dumps(playerList))
             
     except Exception as e:

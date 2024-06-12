@@ -3,6 +3,7 @@ import asyncio
 import websockets
 import InfectionLogic3 as infLog
 import random
+import json
 
 pygame.init()
 uiSize = 150
@@ -22,13 +23,13 @@ virus = infLog.virus
 infDist = infLog.infDist
 infStrength = infLog.infStrength
 
+pygame.display.set_caption(playerName)
 uri = "ws://localhost:8765"
 
 async def interlinked():
     async with websockets.connect(uri) as websocket:
         global counter
         global playerPos
-        
         global infStatus
         global virus
         global infDist
@@ -54,9 +55,9 @@ async def interlinked():
             text_surface = font.render(status, True, "white")
             text_rect = text_surface.get_rect(center=(uiSizeHalf+75,uiSizeHalf))
             screen.blit(text_surface, text_rect)
-            
-            xOffset = random.randint(-1,1) * 5
-            yOffset = random.randint(-1,1) * 5
+
+            xOffset = random.randint(-1,1) * 7
+            yOffset = random.randint(-1,1) * 7
             playerPos.x += xOffset
             playerPos.y += yOffset
 
@@ -64,16 +65,14 @@ async def interlinked():
             
             playerInfo[playerName] = [playerPos.x,playerPos.y,infStatus,virus,infDist,infStrength]
 
-            await websocket.send(str(playerInfo))
+            await websocket.send(json.dumps(playerInfo))
             
             response = await websocket.recv()
-            playerList = eval(response)
+            playerList = json.loads(response)
             playerStats = playerList[playerName]
             playerPos = pygame.Vector2(playerStats[0],playerStats[1])
             
-            infStatus, virus, infDist, infStrength, counter = infLog.infectionLogicDef(playerList, counter)
-        
-            dt = clock.tick(30) / 1000
+            infStatus, virus, infDist,infStrength,counter = infLog.infectionLogicDef(playerList, counter)
 
         pygame.quit()
 

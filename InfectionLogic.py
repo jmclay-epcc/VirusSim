@@ -21,7 +21,7 @@ def infectionLogicDef(playerList, counter):
     infDist = playerStats[4]
     infStrength = playerStats[5]
     
-    if infStatus == False and counter >= (infCheckTime * 30):
+    if infStatus == False and counter >= (infCheckTime * 60):
         # The next chuck of script to see how close every other player in the dictionary is to current player, and then determines if current player can and should be infected by them.  
         for nthPlayer, nthStats in playerList.items(): # Loop through the list of players
             if nthPlayer != playerName: # We're only interested in the players that AREN'T current player, eg the "nth player". 
@@ -45,6 +45,7 @@ def infectionLogicDef(playerList, counter):
                         infDist = nthInfDist
                         infStrength = nthInfStrength
                         print("You've been infected with",virus,"!  This virus has a range of",infDist,"and a strength of",infStrength)
+                        break
         counter = 0
     elif infStatus == False:
         counter += 1

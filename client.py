@@ -60,22 +60,22 @@ async def interlinked():
 
             keys = pygame.key.get_pressed()
             if keys[pygame.K_UP]:
-                playerPos.y -= 5
+                playerPos.y -= 7
                 upCol = "blue"
             else:
                 upCol = "gray"
             if keys[pygame.K_DOWN]:
-                playerPos.y += 5
+                playerPos.y += 7
                 downCol= "blue"
             else:
                 downCol = "gray"
             if keys[pygame.K_LEFT]:
-                playerPos.x -= 5
+                playerPos.x -= 7
                 leftCol = "blue"
             else:
                 leftCol = "gray"
             if keys[pygame.K_RIGHT]:
-                playerPos.x += 5
+                playerPos.x += 7
                 rightCol = "blue"
             else:
                 rightCol = "gray"

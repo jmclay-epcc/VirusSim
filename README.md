@@ -78,8 +78,8 @@ This is a somewhat crude execution, but this does not matter - Luca’s webpage 
 
 ## The less important scripts
 
-The numbered infectionLogics, and roboclients, and run_scripts.py all relate to testing.  You can use these to launch multiple clients that jitter arounds on a random walk.  Currently i don't think they'll actually work because they haven't been updated to send json files over the websockets instead of strings.  
+The numbered infectionLogics, and roboclients, and run_scripts.py all relate to testing.  You can use these to launch multiple clients that jitter arounds on a random walk.  There is a branch of this repo that has 20 bots but i am NOT updating that all by hand.  We can get the damn thing on some VMs and test it properly.  
 
-server (depreciated).py is the old version of the server script.  It is essentially just decoupled_server.py and display.py smushed together.  Also probably won't work anymore due to talking with strings instead of json files.  
+server (depreciated).py is the old version of the server script.  It is essentially just decoupled_server.py and display.py smushed together.  This probably won't work anymore due to it using strings instead of json files to talk over the websockets.   
 
 expo.py is a very simple tool that lets you visualise the infection curves of an infected player.  You can toggle the infections distance and strength, and see how that changes the likelyhood if this player infecting another at any given distance.  It started off as a debug tool to help me wrap my head around what the hell a sigmoid curve was but I think its quite a fun visualisation.  

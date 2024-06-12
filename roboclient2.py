@@ -1,15 +1,17 @@
 import pygame
 import asyncio
 import websockets
-import InfectionLogic1 as infLog
+import InfectionLogic2 as infLog
 import random
 import json
 
 pygame.init()
-uiSize = 300
+uiSize = 150
 uiSizeHalf = uiSize/2
-screen = pygame.display.set_mode((uiSize, uiSize+50))
+boardSize = 500 # This needs to match the board size on the server.  I could set up a web socket to pull this number from the server script but i really dont want to!  
+screen = pygame.display.set_mode((uiSize+150, uiSize))
 clock = pygame.time.Clock()
+dt = 0
 
 playerPos = pygame.Vector2(375+random.randint(-300,300), 250+random.randint(-200,200))
 playerInfo = {}
@@ -43,10 +45,6 @@ async def interlinked():
                     running = False
 
             screen.fill("purple")
-            pygame.draw.circle(screen, upCol, (uiSizeHalf,uiSizeHalf-75), 20) # up arrow
-            pygame.draw.circle(screen, downCol, (uiSizeHalf,uiSizeHalf+75), 20) # down arrow
-            pygame.draw.circle(screen, leftCol, (uiSizeHalf-75,uiSizeHalf), 20) # left arrow
-            pygame.draw.circle(screen, rightCol, (uiSizeHalf+75,uiSizeHalf), 20) # right arrow
             
             if infStatus == False:
                 status = "Healthy :)"
@@ -55,30 +53,13 @@ async def interlinked():
             
             font = pygame.font.Font(None, 27)
             text_surface = font.render(status, True, "white")
-            text_rect = text_surface.get_rect(center=(uiSizeHalf,uiSize))
+            text_rect = text_surface.get_rect(center=(uiSizeHalf+75,uiSizeHalf))
             screen.blit(text_surface, text_rect)
 
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_UP]:
-                playerPos.y -= 5
-                upCol = "blue"
-            else:
-                upCol = "gray"
-            if keys[pygame.K_DOWN]:
-                playerPos.y += 5
-                downCol= "blue"
-            else:
-                downCol = "gray"
-            if keys[pygame.K_LEFT]:
-                playerPos.x -= 5
-                leftCol = "blue"
-            else:
-                leftCol = "gray"
-            if keys[pygame.K_RIGHT]:
-                playerPos.x += 5
-                rightCol = "blue"
-            else:
-                rightCol = "gray"
+            xOffset = random.randint(-1,1) * 7
+            yOffset = random.randint(-1,1) * 7
+            playerPos.x += xOffset
+            playerPos.y += yOffset
 
             pygame.display.flip()
             
