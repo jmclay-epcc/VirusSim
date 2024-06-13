@@ -10,11 +10,14 @@ The tasks that this script executes can be broken down into these steps:-
 
 2. A websocket server is created, which multiple clients are able to connect to.  Every step after this is contained within a while loop, and will repeat until the script is manually killed.  
 
-3. The servers then waits until a connected client sends a message.  The clients messages consist of a json file with the following format:-  
+3. The servers then waits until a connected client sends a message (see step 3 and 6 of client.py).  The clients messages consist of a json file with the following format:-  
 
-	player name: player pos X, player pos Y, infection Status, virus name, infection distance, infection strength
+	player name: player pos X, player pos Y, infection Status, virus name, infection distance, infection strength, wallShareCheck
 
-	A check is done at this point - if the connecting clients name is “Display1234567890”,  they are considered a display client and are skipped forward to step 7.  If not, they progress through the steps are normal.  
+	At this point there is an If statement with three options:- 
+	-	if wallShareCheck = False, then a json file consisting of the board width, board height, and lists containing the X position, Y position, X length and Y length of each wall in the playable area, is sent back to the client.  Every clients wallShareCheck value will be False at first, so every client will fall into this option when they send their first message to the server.  However once they receive this wall data their wallShareCheck is set to true - this means that they only ever fall into this option once.    
+	-	if playerName does NOT equal "Display1234567890", then step 4 and onwards are followed.  
+	- For all other clients that don't meet these two options (which is to say, clients with the username "Display1234567890" who have already recieved their the wall data message), only step 7 and 8 are followed.  
 
 4. The players name and websocket ID are added to a dictionary, along with the names and websocket IDs of all other connected players.  This means that when a websocket connected is severed (e.g. a player disconnects), we can easily look up which player this websocket connection corresponds to, and remove them from the player dictionary defined in step 6.  
 
@@ -24,7 +27,7 @@ The tasks that this script executes can be broken down into these steps:-
 
 7. This full dictionary is then sent back to the client.  The script then sleeps for some pre-defined period (currently 1/60 of a second).  
 
-9. The while loop then starts over (see step 3 and onwards).  
+8. The while loop then starts over (see step 3 and onwards).  
 
 
 
@@ -34,23 +37,25 @@ The tasks that this script executes can be broken down into these steps:-
 
 1. A pygame instance is initiated, and its window size defined.  We also import the infectionLogic.py script at this point.  
 
-2. The initial player stats are pulled from the infectionLogic,py script.  The player is given a starting position between -1000,1000 and -1000,-1000, which might seem odd but is for a good reason.  The client does not know the size of the playable area (to do this we'd have to share the board dimensions over the websocket, which is doable but a bit redundant), so giving them a nice random initial distribution that makes full use of the playable area is hard.  However, the server already has the capability to do this - when a player finds themselves outside of the playable area (this can happen if they set their movement speed very high, or if they somehow send bad position data), they automatically get dropped back into a random place in the full playable area.  So by having each player spawn in an initially bad location, the server will automatically redistributes them into good locations after 1 frame (technically 2 frames if they get respawned into a wall but they'll be put into a good location 99% of the time after that).  
+2. The initial player stats are pulled from the infectionLogic,py script and saved in a dictionary with the following format:-
 
-3. The client script is then connected to the server.  Every step beyond this is contains within a while loop and will repeat until the pygame window is closed.  
-
-4. The control UI elements are defined (directional buttons, infection status readout, etc).  A set of If statements check for control inputs (e.g. move up, move left, etc), and updates the players position accordingly.  A check is also done on the players infection status, and the readout is updated if needed.  The pygame window is then flipped to display these UI changes.  
-
-5. The players name and stats are then saved into a dictionary, with the following format:-  
+	player name: player pos X, player pos Y, infection Status, virus name, infection distance, infection strength, wallShareCheck
 	
-	player name: player pos X, player pos Y, infection Status, virus name, infection distance, infection strength
+	The player is given a starting position between -1000,1000 and -1000,-1000, which might seem odd but is for a good reason.  The client does not know the size of the playable area (to do this we'd have to share the board dimensions over the websocket, which is doable but a bit redundant), so giving them a nice random initial distribution that makes full use of the playable area is hard.  However, the server already has the capability to do this - when a player finds themselves outside of the playable area (this can happen if they set their movement speed very high, or if they somehow send bad position data), they automatically get dropped back into a random place in the full playable area.  So by having each player spawn in an initially bad location, the server will automatically redistributes them into good locations after 1 frame (technically 2 frames if they get respawned into a wall but they'll be put into a good location 99% of the time after that).  
 
-	This dictionary is then send to the server as a json file (see step 3 in decoupled_server.py).  
+3. The client script is then connected to the server.  The dictonary created in step 2 is sent to the server (see step 3 of decoupled_server.py).  
 
-6. The client then awaits a reply from the server, which will consist of a json file containing the names and stats of every player connected to the server (see step 7 in decoupled_server.py).  The players own stats are then extracted from this list, and uses them to update its own X and Y positions (in case the values it sent to the server in step 5 were illegal and the server sent back corrected legal values).  
+4. The client then awaits a reply from the server.  As this is the first message sent, the server will reply with a JSON file containing data about the board size and wall positions (see step 3 of decoupled_server.py).  This data is saved, and the value of wallShareCheck is set to True.  Every step beyond this is contains within a while loop and will repeat until the pygame window is closed.  
 
-7. infectionLogicDef, which is held within infectionLogic.py, is invoked, with the player list that we received from the server in step 6 as the input (as well as a counter, which is just a number that ticks up by one every frame and resets to 0 if the player becomes infected or if it exceeds a certain value defined in infectionLogic.py).  This returns updated values for infection status, virus name, infection strength, and the counter.  
+5. The control UI elements are defined (directional buttons, infection status readout, etc).  A set of If statements check for control inputs (e.g. move up, move left, etc), and updates the players position accordingly.  A check is also done on the players infection status, and the readout is updated if needed.  The pygame window is then flipped to display these UI changes.  
 
-8. The while loop then starts over (see step 4 and onwards).  
+6. The dictionary defined in step 2 is updated with any new values and sent to the server (see step 3 in decoupled_server.py).  
+
+7. The client then awaits a reply from the server, which will consist of a json file containing the names and stats of every player connected to the server (see step 7 in decoupled_server.py).  The players own stats are then extracted from this list, and uses them to update its own X and Y positions (in case the values it sent to the server in step 5 were illegal and the server sent back corrected legal values).  
+
+8. infectionLogicDef, which is held within infectionLogic.py, is invoked, with the player list that we received from the server in step 6 as the input (as well as a counter, which is just a number that ticks up by one every frame and resets to 0 if the player becomes infected or if it exceeds a certain value defined in infectionLogic.py).  This returns updated values for infection status, virus name, infection strength, and the counter.  
+
+9. The while loop then starts over (see step 4 and onwards).  
 
 
 ## infectionLogic.py
@@ -72,14 +77,14 @@ The tasks that this script executes can be broken down into these steps:-
 
 ## display.py
 
-This is essentially a modified version of client.py, which sends the a set of dummy player stats, under a specific player name that the server recognises and excludes from the player list.  It then receives the full player dictionary from the server, and displays this in its pygame window.  It also runs some basic scripting that generates unique colours for infected players based off of their infections name.  
+This is essentially a modified version of client.py, which sends the a set of dummy player stats, under a specific player name that the server recognises and excludes from the player list.  It then receives the full player dictionary from the server, and displays this in its pygame window.  It also runs some basic scripting that generates unique colours for infected players based off of their infections name.  One saliant difference is that, while the regular clients do not (currently) make much use of the wall and window size data, display.py needs them because it actually needs to generate an accurate UI.  
 
 This is a somewhat crude execution, but this does not matter - Luca’s webpage will replace this script entirely.  This is really just a proof on concept to show how a websocket client can be used to create a UI, rather than having the UI baked right into the server script itself, or by doing some other complicated method.  
 
 
 ## The less important scripts
 
-The numbered infectionLogics, and roboclients, and run_scripts.py all relate to testing.  You can use these to launch multiple clients that jitter arounds on a random walk.  There is a branch of this repo that has 20 bots but i am NOT updating that all by hand.  We can get the damn thing on some VMs and test it properly.  
+The numbered infectionLogics, and roboclients, and run_scripts.py all relate to testing.  You can use these to launch multiple clients that jitter arounds on a random walk.  The roboclients are currently set to no launch in run_scripts.py because i haven't updated them to take and share wall data.  This is a simple copy-paste process but i cannot be bothered right now!  
 
 server (depreciated).py is the old version of the server script.  It is essentially just decoupled_server.py and display.py smushed together.  This probably won't work anymore due to it using strings instead of json files to talk over the websockets.   
 
