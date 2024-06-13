@@ -24,6 +24,18 @@ async def interlinked():
         await websocket.send(json.dumps(dummyPlayerInfo)) # Before we get into the while loop, we want to poke the server to send up a one-off message containing the definitions for the window size and wall positions.  After this, ever message that this script receives from the server will be a playerList.  
         initialWallShare = await websocket.recv()
         wallDefs = json.loads(initialWallShare)
+     
+# ------------------------        
+#        
+# The wallDefs list is formatted like this:-
+#boardWidth, 
+#boardHeight, 
+#(wallXPos,wallYPos,wallwidth,wallHeight),
+#(wallXPos,wallYPos,wallwidth,wallHeight),
+#.....
+#
+# ------------------------
+       
         wallShareCheck = True
         
         screen = pygame.display.set_mode((wallDefs[0], wallDefs[1]))
