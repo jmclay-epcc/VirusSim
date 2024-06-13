@@ -12,10 +12,9 @@ The tasks that this script executes can be broken down into these steps:-
 
 3. The servers then waits until a connected client sends a message.  The clients messages consist of a json file with the following format:-  
 
-	player name: player pos X player pos Y, infection Status, virus name, infection distance, infection strength
+	player name: player pos X, player pos Y, infection Status, virus name, infection distance, infection strength
 
-	A check is done at this point - if the connecting clients name is “Display1234567890”,  they are considered a display client and are skipped 		forward to step 7.  If not, then their player name and websocket ID is added to a dictionary that contain the player names and websocket IDs of 
-	every connected player.  If not, they progress through the steps are normal.  
+	A check is done at this point - if the connecting clients name is “Display1234567890”,  they are considered a display client and are skipped forward to step 7.  If not, they progress through the steps are normal.  
 
 4. The players name and websocket ID are added to a dictionary, along with the names and websocket IDs of all other connected players.  This means that when a websocket connected is severed (e.g. a player disconnects), we can easily look up which player this websocket connection corresponds to, and remove them from the player dictionary defined in step 6.  
 
@@ -23,7 +22,7 @@ The tasks that this script executes can be broken down into these steps:-
 
 6. The players corrected stats are then placed in a larger dictionary that contains the stats of every connected player.  
 
-7. This full dictionary is then sent back to the client.  The script then sleeps for 1/120 seconds.  
+7. This full dictionary is then sent back to the client.  The script then sleeps for some pre-defined period (currently 1/60 of a second).  
 
 9. The while loop then starts over (see step 3 and onwards).  
 
@@ -33,21 +32,21 @@ The tasks that this script executes can be broken down into these steps:-
 
 The tasks that this script executes can be broken down into these steps:-
 
-1. A pygame instance is initiated, and its window size defined (we can do this here as opposed to within the while loop that is started after step 3 because the window size never changes).  We also import the infectionLogic.py script at this point.  
+1. A pygame instance is initiated, and its window size defined.  We also import the infectionLogic.py script at this point.  
 
-2. The initial player stats are pulled from the infectionLogic,py script.  A random starting position is also created for the player (we don’t really need to worry about this too much because decoupled_server.py will correct this to a valid value if a crap value is generated).  
+2. The initial player stats are pulled from the infectionLogic,py script.  The player is given a starting position between -1000,1000 and -1000,-1000, which might seem odd but is for a good reason.  The client does not know the size of the playable area (to do this we'd have to share the board dimensions over the websocket, which is doable but a bit redundant), so giving them a nice random initial distribution that makes full use of the playable area is hard.  However, the server already has the capability to do this - when a player finds themselves outside of the playable area (this can happen if they set their movement speed very high, or if they somehow send bad position data), they automatically get dropped back into a random place in the full playable area.  So by having each player spawn in an initially bad location, the server will automatically redistributes them into good locations after 1 frame (technically 2 frames if they get respawned into a wall but they'll be put into a good location 99% of the time after that).  
 
 3. The client script is then connected to the server.  Every step beyond this is contains within a while loop and will repeat until the pygame window is closed.  
 
-4. The control UI elements are defined (directional buttons, infection status readout, etc).  A set of If statements check for control inputs (e.g. move up, move left, etc), and current player position X and Y values correspondingly.  A check is also done on the players infection status, and the readout is updated if needed.  The pygame window is then flipped to display these UI changes.  
+4. The control UI elements are defined (directional buttons, infection status readout, etc).  A set of If statements check for control inputs (e.g. move up, move left, etc), and updates the players position accordingly.  A check is also done on the players infection status, and the readout is updated if needed.  The pygame window is then flipped to display these UI changes.  
 
 5. The players name and stats are then saved into a dictionary, with the following format:-  
 	
-	player name: player pos X player pos Y, infection Status, virus name, infection distance, infection strength
+	player name: player pos X, player pos Y, infection Status, virus name, infection distance, infection strength
 
 	This dictionary is then send to the server as a json file (see step 3 in decoupled_server.py).  
 
-6. The client then awaits a reply from the server, which will consist of a json file containing the names and stats of every player connected to the server (see step 7 in decoupled_server.py).  The players own stats are then extracted from this list, and uses them to update its own X and Y positions (in case the values it sent to the server in step 5 were illegal, and the server sent back corrected legal values).  
+6. The client then awaits a reply from the server, which will consist of a json file containing the names and stats of every player connected to the server (see step 7 in decoupled_server.py).  The players own stats are then extracted from this list, and uses them to update its own X and Y positions (in case the values it sent to the server in step 5 were illegal and the server sent back corrected legal values).  
 
 7. infectionLogicDef, which is held within infectionLogic.py, is invoked, with the player list that we received from the server in step 6 as the input (as well as a counter, which is just a number that ticks up by one every frame and resets to 0 if the player becomes infected or if it exceeds a certain value defined in infectionLogic.py).  This returns updated values for infection status, virus name, infection strength, and the counter.  
 
@@ -64,9 +63,9 @@ The tasks that this script executes can be broken down into these steps:-
 
 2. An if statement runs if the player is currently uninfected, and if their counter is currently above a specified value.  If the player meets these two criteria then their counter is reset to 0; if they are uninfected but their counter is below 0 then their counter is incremented up by 1.  
 
-3. (Still in this if loop, conditional on the player being uninfected and their counter being above the specified value) A for loop is started which runs through other player on the full player list (see step 7 of client.py).  Each infected player on the list provides a position, an infection name, an infection strength, and an infection distance.  If the current player finds that it is within the infection distance of an infected player, it uses its infection distance and strength to calculate a percentage odds of being infected, based off of a sigmoid curve formula (this part is absolutely overly complicated.  You could easily just have the odds of infection be determined linearly by the distance and have the strength be an additional thing).  
+3. (Still in this if loop, conditional on the player being uninfected and their counter being above the specified value) A for loop is started which runs through other player on the full player list (see step 7 of client.py).  Each infected player on the list provides a position, an infection name, an infection strength, and an infection distance.  If the current player finds that it is within the infection distance of an infected player, it uses the infected players infection distance and strength to calculate a percentage odds of being infected, based off of a sigmoid curve formula (this part is absolutely overly complicated.  You could easily just have the odds of infection be determined linearly by the distance and have the strength be an additional thing).  
 
-4. A random number between 1 and 100 is then generated.  If it’s less than the calculated odds of infection, then the player becomes infected.  The players infection status is changed to True, and they take on the stats of the player that infected them (virus name, strength, distance).  The for loop is then broken.  
+4. A random number between 1 and 100 is then generated.  If it’s less than the calculated odds of infection, then the player becomes infected.  The players infection status is changed to True, and they take on the stats of the player that infected them (virus name, strength, distance).  The for loop is then broken.  If the number is higher then the player is not infected, and the for loop breaks within anything being changed.  
 
 5. With the for loop now finished, the players new infection status, virus name, infection distance, infection strength and counter value are returned to client.py (see step 7 of client.py).  
 
