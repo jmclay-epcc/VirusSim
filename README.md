@@ -17,7 +17,7 @@ The tasks that this script executes can be broken down into these steps:-
 	At this point there is an If statement with three options:- 
 	-	if wallShareCheck = False, then a json file consisting of the board width, board height, and lists containing the X position, Y position, X length and Y length of each wall in the playable area, is sent back to the client.  Every clients wallShareCheck value will be False at first, so every client will fall into this option when they send their first message to the server.  However once they receive this wall data their wallShareCheck is set to true - this means that they only ever fall into this option once.    
 	-	if playerName does NOT equal "Display1234567890", then step 4 and onwards are followed.  
-	- For all other clients that don't meet these two options (which is to say, clients with the username "Display1234567890" who have already recieved their the wall data message), only step 7 and 8 are followed.  
+	- For all other clients that don't fall into the other two options (clients with the username "Display1234567890" who have already recieved their the wall data message, which is to say the display after its gotten its copy of the wall data), only step 7 and 8 are followed.  
 
 4. The players name and websocket ID are added to a dictionary, along with the names and websocket IDs of all other connected players.  This means that when a websocket connected is severed (e.g. a player disconnects), we can easily look up which player this websocket connection corresponds to, and remove them from the player dictionary defined in step 6.  
 
