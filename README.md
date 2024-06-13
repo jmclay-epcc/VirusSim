@@ -1,8 +1,8 @@
 # Explaination of important scripts.  
 
-### To launch the server script, display script, client and bot client scripts in a single terminal, run run_scripts.py.  The clients and the display won't run unless the server is already running - they'll just crash if you launch them by themselves.  However you can also run each script in individual terminals - as long as decoupled_server.py is started before any of the clients, the clients will start up and connect just fine.  
+### To launch the server script, display script, client and bot client scripts in a single terminal, run run_scripts.py.  The clients and the display won't run unless the server is already running - they'll just crash if you launch them by themselves.  However you can also run each script in individual terminals - as long as server.py is started before any of the clients, the clients will start up and connect just fine.  
 
-## decoupled_server.py
+## server.py
 
 The tasks that this script executes can be broken down into these steps:-
 
@@ -43,15 +43,15 @@ The tasks that this script executes can be broken down into these steps:-
 	
 	The player is given a starting position between -1000,1000 and -1000,-1000, which might seem odd but is for a good reason.  The client does not know the size of the playable area (to do this we'd have to share the board dimensions over the websocket, which is doable but a bit redundant), so giving them a nice random initial distribution that makes full use of the playable area is hard.  However, the server already has the capability to do this - when a player finds themselves outside of the playable area (this can happen if they set their movement speed very high, or if they somehow send bad position data), they automatically get dropped back into a random place in the full playable area.  So by having each player spawn in an initially bad location, the server will automatically redistributes them into good locations after 1 frame (technically 2 frames if they get respawned into a wall but they'll be put into a good location 99% of the time after that).  
 
-3. The client script is then connected to the server.  The dictonary created in step 2 is sent to the server (see step 3 of decoupled_server.py).  
+3. The client script is then connected to the server.  The dictonary created in step 2 is sent to the server (see step 3 of server.py).  
 
-4. The client then awaits a reply from the server.  As this is the first message sent, the server will reply with a JSON file containing data about the board size and wall positions (see step 3 of decoupled_server.py).  This data is saved, and the value of wallShareCheck is set to True.  Every step beyond this is contains within a while loop and will repeat until the pygame window is closed.  
+4. The client then awaits a reply from the server.  As this is the first message sent, the server will reply with a JSON file containing data about the board size and wall positions (see step 3 of server.py).  This data is saved, and the value of wallShareCheck is set to True.  Every step beyond this is contains within a while loop and will repeat until the pygame window is closed.  
 
 5. The control UI elements are defined (directional buttons, infection status readout, etc).  A set of If statements check for control inputs (e.g. move up, move left, etc), and updates the players position accordingly.  A check is also done on the players infection status, and the readout is updated if needed.  The pygame window is then flipped to display these UI changes.  
 
-6. The dictionary defined in step 2 is updated with any new values and sent to the server (see step 3 in decoupled_server.py).  
+6. The dictionary defined in step 2 is updated with any new values and sent to the server (see step 3 in server.py).  
 
-7. The client then awaits a reply from the server, which will consist of a json file containing the names and stats of every player connected to the server (see step 7 in decoupled_server.py).  The players own stats are then extracted from this list, and uses them to update its own X and Y positions (in case the values it sent to the server in step 5 were illegal and the server sent back corrected legal values).  
+7. The client then awaits a reply from the server, which will consist of a json file containing the names and stats of every player connected to the server (see step 7 in server.py).  The players own stats are then extracted from this list, and uses them to update its own X and Y positions (in case the values it sent to the server in step 5 were illegal and the server sent back corrected legal values).  
 
 8. infectionLogicDef, which is held within infectionLogic.py, is invoked, with the player list that we received from the server in step 6 as the input (as well as a counter, which is just a number that ticks up by one every frame and resets to 0 if the player becomes infected or if it exceeds a certain value defined in infectionLogic.py).  This returns updated values for infection status, virus name, infection strength, and the counter.  
 
@@ -86,6 +86,6 @@ This is a somewhat crude execution, but this does not matter - Luca’s webpage 
 
 The numbered infectionLogics, and roboclients, and run_scripts.py all relate to testing.  You can use these to launch multiple clients that jitter arounds on a random walk.  The roboclients are currently set to no launch in run_scripts.py because i haven't updated them to take and share wall data.  This is a simple copy-paste process but i cannot be bothered right now!  
 
-server (depreciated).py is the old version of the server script.  It is essentially just decoupled_server.py and display.py smushed together.  This probably won't work anymore due to it using strings instead of json files to talk over the websockets.   
+server (depreciated).py is the old version of the server script.  It is essentially just server.py and display.py smushed together.  This is very out of date and won't work anymore for a huge number of reasons, but i am keeping it in case i ever need to refer back to an older verison of the setup.  
 
 expo.py is a very simple tool that lets you visualise the infection curves of an infected player.  You can toggle the infections distance and strength, and see how that changes the likelyhood if this player infecting another at any given distance.  It started off as a debug tool to help me wrap my head around what the hell a sigmoid curve was but I think its quite a fun visualisation.  

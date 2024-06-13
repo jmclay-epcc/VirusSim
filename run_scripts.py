@@ -6,7 +6,7 @@ def run_script(script_name):
     subprocess.run(["python", script_name])
 
 if __name__ == "__main__":
-    script1_thread = threading.Thread(target=run_script, args=("decoupled_server.py",))
+    script1_thread = threading.Thread(target=run_script, args=("server.py",))
     script2_thread = threading.Thread(target=run_script, args=("client.py",))
     #script3_thread = threading.Thread(target=run_script, args=("roboclient1.py",))
     #script5_thread = threading.Thread(target=run_script, args=("roboclient3.py",))
