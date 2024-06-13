@@ -1,5 +1,7 @@
 # Explaination of important scripts.  
 
+### To launch the server script, displauy script, client and bot client scripts in a single terminal, run run_scripts.py.  
+
 ## decoupled_server.py
 
 The tasks that this script executes can be broken down into these steps:-
