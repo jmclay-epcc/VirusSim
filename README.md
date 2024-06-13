@@ -1,6 +1,6 @@
 # Explaination of important scripts.  
 
-### To launch the server script, displauy script, client and bot client scripts in a single terminal, run run_scripts.py.  
+### To launch the server script, display script, client and bot client scripts in a single terminal, run run_scripts.py.  The clients and the display won't run unless the server is already running - they'll just crash if you launch them by themselves.  However you can also run each script in individual terminals - as long as decoupled_server.py is started before any of the clients, the clients will start up and connect just fine.  
 
 ## decoupled_server.py
 
