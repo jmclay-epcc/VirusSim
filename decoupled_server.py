@@ -6,22 +6,42 @@ import json
 
 boardWidth = 1000
 boardHeight = 750
-playerRadii = 15
+playerRadii = int(boardHeight / (100/3))
 clock = pygame.time.Clock()
 playerList = {}
 websocketDict = {}
 
-walls = [pygame.Rect(-40, -40, 50, boardHeight+40), # Left border
-        pygame.Rect(-40, -40, boardWidth+40, 50), # Top border
-        pygame.Rect(boardWidth - 10, 0, 50, boardHeight), # Right border
-        pygame.Rect(-40, boardHeight - 10, boardWidth+40, 50), # Bottom border
+wallThickness = boardHeight / 10
+wallDefs = [boardWidth,
+            boardHeight,
+            (-40, -40, 50, boardHeight+40), # The first four walls detailed are the boundary walls for the playable area.  Don't change these values! Don't even look them! 
+            (-40, -40, boardWidth+40, 50),  # These numbers represent the rectangles X axis position, Y axis position, Length along X axis and length along Y axis.  Its also worth pointing out that this is measuring from the top-left corner, so the y-axis is upside down compared to a regular graph.  Its the same for JS though so it shouldnt be an issue.  
+            (boardWidth - 10, 0, 50, boardHeight),
+            (-40, boardHeight - 10, boardWidth+40, 50),
+# - Horizontal lines
+            (boardWidth * 1/8, boardHeight * 2/8, boardWidth * 2/8, wallThickness), # Top-left
+            (boardWidth * 1/8, -wallThickness + boardHeight * 6/8, boardWidth * 2/8, wallThickness), # Bottom-left
+            (boardWidth * 5/8, boardHeight * 2/8, boardWidth * 2/8, wallThickness), # Top-right
+            (boardWidth * 5/8, -wallThickness + boardHeight * 6/8, boardWidth * 2/8, wallThickness), # Bottom-right
+# - Vertical lines
+            (-wallThickness + boardWidth * 3/8, -10, wallThickness, 10 + wallThickness + boardHeight * 2/8), # Top-left
+            (-wallThickness + boardWidth * 3/8, -wallThickness + boardHeight * 6/8, wallThickness, 10 + wallThickness + boardHeight * 2/8), # Bottom-left
+            (boardWidth * 5/8, -10, wallThickness, 10 + wallThickness + boardHeight * 2/8), # Top-right
+            (boardWidth * 5/8, -wallThickness + boardHeight * 6/8, wallThickness, 10 + wallThickness + boardHeight * 2/8)] # Bottom-right
+
+walls = [pygame.Rect(wallDefs[2]), # Left border
+        pygame.Rect(wallDefs[3]), # Top border
+        pygame.Rect(wallDefs[4]), # Right border
+        pygame.Rect(wallDefs[5]), # Bottom border
          
-        pygame.Rect(boardWidth - 300, 0, 125, 175),
-        pygame.Rect(boardWidth - 800, boardHeight - 150, 100, 200),
-        pygame.Rect(boardWidth - 700, 0, 75, 225),
-        pygame.Rect(boardWidth - 800, 185, 150, 40),
-        pygame.Rect(boardWidth - 400, boardHeight - 250, 150, 150),
-        pygame.Rect(boardWidth - 400, boardHeight - 250, 400, 50)]
+        pygame.Rect(wallDefs[6]),
+        pygame.Rect(wallDefs[7]),
+        pygame.Rect(wallDefs[8]),
+        pygame.Rect(wallDefs[9]),
+        pygame.Rect(wallDefs[10]),
+        pygame.Rect(wallDefs[11]),
+        pygame.Rect(wallDefs[12]),
+        pygame.Rect(wallDefs[13])]
 
 
 async def echo(websocket, path):
@@ -30,15 +50,20 @@ async def echo(websocket, path):
         global walls
         global playerRadii
         global playerList
+        global wallDefs
 
         while True:
             message = await websocket.recv()
             messageDict = json.loads(message)
             playerName, playerStats = next(iter(messageDict.items()))
+            websocketDict[websocket] = playerName
+            await asyncio.sleep(1/60)
             
-            if playerName != "Display1234567890": # This is an intentionally odd username to minimise the chance of a player picking it.  We don't want the display client to be put on playerList, because it isn't a player, so we filter it out by checking for its specific username.  
+            if playerStats[6] == False:
+                await websocket.send(json.dumps(wallDefs)) # We want to share the details of the window size and wall positions to the display, but we only want to send this info once; when the display first connects.  To this end, when the display connects to the server, the first message the server sends to it is the wall info instead of the player list.  The display is expecting this one-off message, so it is able to process that data as wall info before going to on process every following message as player info.  
+            
+            elif playerName != "Display1234567890": # This is an intentionally odd username to minimise the chance of a player picking it.  We don't want the display client to be put on playerList, because it isn't a player, so we filter it out by checking for its specific username.  
                 playerList[playerName] = playerStats
-                websocketDict[websocket] = playerName
                 
                 for wall in walls:
                     if playerStats[0] - playerRadii < wall.right and playerStats[0] + playerRadii > wall.left and playerStats[1] - playerRadii < wall.bottom and playerStats[1] + playerRadii > wall.top: 
@@ -58,16 +83,22 @@ async def echo(websocket, path):
                             
                 if playerStats[0] < 0 or playerStats[0] > boardWidth or playerStats[1] < 0 or playerStats[1] > boardHeight: # This if statement is basically an idiot-check to make sure that any players that randomly spawn inside a wall such that they get bumped outside of the map get stuck back into the map.  In theory this does not cover every case where a player can be put somewhere they should't be - they can, for example, get wedged between two walls and spend eternity getting bumped from one to the other between frames.  If this happens to a player, then the player can bloody well just quit and rejoin because i CANNOT figured out how to automatically catch this.   
                     playerStats[0] = (boardWidth/2)+int(random.randint(-boardWidth,boardWidth)/2)
-                    playerStats[1] = (boardWidth/2)+int(random.randint(-boardHeight,boardHeight)/2)
-
-            await asyncio.sleep(1/60)
-            await websocket.send(json.dumps(playerList))
-            
+                    playerStats[1] = (boardHeight/2)+int(random.randint(-boardHeight,boardHeight)/2)
+                    
+                await websocket.send(json.dumps(playerList))
+                
+            else:
+                await websocket.send(json.dumps(playerList))
+                
     except Exception as e:
         print("Client error - ",e)
         errorPlayer = websocketDict[websocket]
-        del playerList[errorPlayer]
-        print("Client Disconnected")
+        if errorPlayer == "Display1234567890":
+            print("Connect to display lost!")
+            wallShareCheck = False
+        else:
+            del playerList[errorPlayer]
+            print("Client Disconnected")
         
         
 async def main():

@@ -5,34 +5,43 @@ import InfectionLogic as infLog
 import json
 
 pygame.init()
-boardWidth = 1000
-boardHeight = 750
-playerRadii = 15
-screen = pygame.display.set_mode((boardWidth, boardHeight))
 clock = pygame.time.Clock()
 running = True
-dt = 0
+wallShareCheck = False
 
+wallDefs = []
 dummyPlayerInfo = {}
-dummyPlayerInfo["Display1234567890"] = [] # This is an intentionally odd username to minimise the chance of a user picking it.  Even if they did it wouldn't crash the server - the user would just not be included in playerList, and so wouldn't be able to interact with anyone or be displayed on the map.  
-
-walls = [pygame.Rect(-40, -40, 50, boardHeight+40), # Left border
-        pygame.Rect(-40, -40, boardWidth+40, 50), # Top border
-        pygame.Rect(boardWidth - 10, 0, 50, boardHeight), # Right border
-        pygame.Rect(-40, boardHeight - 10, boardWidth+40, 50), # Bottom border
-         
-        pygame.Rect(boardWidth - 300, 0, 125, 175),
-        pygame.Rect(boardWidth - 800, boardHeight - 150, 100, 200),
-        pygame.Rect(boardWidth - 700, 0, 75, 225),
-        pygame.Rect(boardWidth - 800, 185, 150, 40),
-        pygame.Rect(boardWidth - 400, boardHeight - 250, 150, 150),
-        pygame.Rect(boardWidth - 400, boardHeight - 250, 400, 50)]
+dummyPlayerInfo["Display1234567890"] = [0,0,0,0,0,0,wallShareCheck] # This is an intentionally odd username to minimise the chance of a user picking it.  Even if they did it wouldn't crash the server - the user would just not be included in playerList, and so wouldn't be able to interact with anyone or be displayed on the map.  
 
 uri = "ws://localhost:8765"
 
 async def interlinked():
-    global running
     async with websockets.connect(uri) as websocket:
+        global running
+        global wallDefs
+        global wallShareCheck
+        
+        await websocket.send(json.dumps(dummyPlayerInfo)) # Before we get into the while loop, we want to poke the server to send up a one-off message containing the definitions for the window size and wall positions.  After this, ever message that this script receives from the server will be a playerList.  
+        initialWallShare = await websocket.recv()
+        wallDefs = json.loads(initialWallShare)
+        wallShareCheck = True
+        
+        screen = pygame.display.set_mode((wallDefs[0], wallDefs[1]))
+        playerRadii = int(wallDefs[1] / (100/3)) # By defining the players radii like this, we can always have them and their text properly scaled to the window.  No more tiny players hiking across huge empty maps.  
+        walls = [pygame.Rect(wallDefs[2]), # Left border
+                pygame.Rect(wallDefs[3]), # Top border
+                pygame.Rect(wallDefs[4]), # Right border
+                pygame.Rect(wallDefs[5]), # Bottom border
+         
+                pygame.Rect(wallDefs[6]),
+                pygame.Rect(wallDefs[7]),
+                pygame.Rect(wallDefs[8]),
+                pygame.Rect(wallDefs[9]),
+                pygame.Rect(wallDefs[10]),
+                pygame.Rect(wallDefs[11]),
+                pygame.Rect(wallDefs[12]),
+                pygame.Rect(wallDefs[13])] # There is always going to be 12 walls in the map - 4 perimeter walls, four vertial, and four horizontal interior walls.  Im not going to change this now unless someone asks.  
+        
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -44,6 +53,7 @@ async def interlinked():
             for wall in walls:
                 pygame.draw.rect(screen, "blue", wall)
                 
+            dummyPlayerInfo["Display1234567890"] = [0,0,0,0,0,0,wallShareCheck]    
             await websocket.send(json.dumps(dummyPlayerInfo))
             response = await websocket.recv()
             playerList = json.loads(response)

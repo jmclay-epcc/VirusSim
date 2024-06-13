@@ -15,7 +15,6 @@ dt = 0
 playerPos = [-1000,random.randint(-1000,1000)]
 playerInfo = {}
 playerName = infLog.playerName
-counter = infLog.counter
 
 infStatus = infLog.infStatus
 virus = infLog.virus
@@ -71,7 +70,7 @@ async def interlinked():
             playerStats = playerList[playerName]
             playerPos = [playerStats[0],playerStats[1]]
             
-            infStatus, virus, infDist,infStrength,counter = infLog.infectionLogicDef(playerList, counter)
+            infStatus, virus, infDist,infStrength = infLog.infectionLogicDef(playerList)
 
         pygame.quit()
 

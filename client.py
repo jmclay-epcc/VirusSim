@@ -13,21 +13,27 @@ screen = pygame.display.set_mode((uiSize, uiSize+50))
 clock = pygame.time.Clock()
 
 playerPos = [-1000,random.randint(-1000,1000)]
-playerInfo = {}
-playerName = infLog.playerName
-counter = infLog.counter
+wallShareCheck = False
 
+playerName = infLog.playerName
 infStatus = infLog.infStatus
 virus = infLog.virus
 infDist = infLog.infDist
 infStrength = infLog.infStrength
+
+playerInfo = {}
+wallDefs = []
+
+playerInfo[playerName] = [playerPos[0],playerPos[1],infStatus,virus,infDist,infStrength,wallShareCheck]
 
 pygame.display.set_caption(playerName)
 uri = "ws://localhost:8765"
 
 async def interlinked():
     async with websockets.connect(uri) as websocket:
-        global counter
+        global wallDefs
+        global playerInfo
+        global wallShareCheck
         global playerPos
         global infStatus
         global virus
@@ -38,6 +44,28 @@ async def interlinked():
         downCol = "gray"
         leftCol = "gray"
         rightCol = "gray"
+        
+        await websocket.send(json.dumps(playerInfo))
+        initialWallShare = await websocket.recv()
+        wallDefs = json.loads(initialWallShare)
+        wallShareCheck = True
+                
+        playerRadii = int(wallDefs[1] / (100/3))
+
+        walls = [pygame.Rect(wallDefs[2]), # Left border
+                pygame.Rect(wallDefs[3]), # Top border
+                pygame.Rect(wallDefs[4]), # Right border
+                pygame.Rect(wallDefs[5]), # Bottom border
+         
+                pygame.Rect(wallDefs[6]),
+                pygame.Rect(wallDefs[7]),
+                pygame.Rect(wallDefs[8]),
+                pygame.Rect(wallDefs[9]),
+                pygame.Rect(wallDefs[10]),
+                pygame.Rect(wallDefs[11]),
+                pygame.Rect(wallDefs[12]),
+                pygame.Rect(wallDefs[13])] # And we can do whatever we want with this info >:)
+        
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -61,8 +89,8 @@ async def interlinked():
 
             keys = pygame.key.get_pressed()
             
-            baseStep = 10 # As is probably quite clear, the player moves by making a step along the X axis, Y axis, or box axis, each frame.  If this step was constant, then the player would end up moving a greater distance when travelling diagonally (if they player held down up and left, the player would move 10 pixels up, 10 left, and ultimately about 14 diagonally).  We want the player to make the same sized step every frame regardless of direction, so we correct the step size based on what keys are being held down here.  
-            if sum(keys) == 2: # Thats a long way of saying im using pythagoras to make sure the player always moves the same distance per frame regardless of direction.  
+            baseStep = int(playerRadii * 2/3) # This makes sure that the speed of the player is always proportional to its radii.  
+            if sum(keys) == 2: # Im using pythagoras to make sure the player always moves the same distance per frame regardless of direction.  This is a very minor quality of life improvement - so minor in fact that its not really comprehensive enough and falls over if the player holds down an arrow key and another random key.  
                 step = math.sqrt((baseStep*baseStep)/2) 
             else:
                 step = baseStep
@@ -90,16 +118,14 @@ async def interlinked():
 
             pygame.display.flip()
             
-            playerInfo[playerName] = [playerPos[0],playerPos[1],infStatus,virus,infDist,infStrength]
-
+            playerInfo[playerName] = [playerPos[0],playerPos[1],infStatus,virus,infDist,infStrength,wallShareCheck]
             await websocket.send(json.dumps(playerInfo))
-            
             response = await websocket.recv()
             playerList = json.loads(response)
             playerStats = playerList[playerName]
             playerPos = [playerStats[0],playerStats[1]]
             
-            infStatus, virus, infDist,infStrength,counter = infLog.infectionLogicDef(playerList, counter)
+            infStatus, virus, infDist,infStrength = infLog.infectionLogicDef(playerList)
 
         pygame.quit()
 

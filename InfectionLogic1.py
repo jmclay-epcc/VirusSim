@@ -11,7 +11,9 @@ infStrength = 20 # This is a percentage.
 infCheckTime = 2
 counter = 12
 
-def infectionLogicDef(playerList, counter):
+def infectionLogicDef(playerList):
+    
+    global counter
     
     playerStats = playerList[playerName]
     playerPos = (playerStats[0],playerStats[1])
@@ -20,7 +22,7 @@ def infectionLogicDef(playerList, counter):
     virus = playerStats[3]
     infDist = playerStats[4]
     infStrength = playerStats[5]
-    
+        
     if infStatus == False and counter >= (infCheckTime * 60):
         # The next chuck of script to see how close every other player in the dictionary is to current player, and then determines if current player can and should be infected by them.  
         for nthPlayer, nthStats in playerList.items(): # Loop through the list of players
@@ -49,5 +51,7 @@ def infectionLogicDef(playerList, counter):
         counter = 0
     elif infStatus == False:
         counter += 1
+    elif infStatus == True:
+        counter = 0
         
-    return infStatus, virus, infDist, infStrength, counter
+    return infStatus, virus, infDist, infStrength
