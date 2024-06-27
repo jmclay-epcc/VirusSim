@@ -14,20 +14,22 @@ The tasks that this script executes can be broken down into these steps:-
 
 	player name: player pos X, player pos Y, infection Status, virus name, infection distance, infection strength, wallShareCheck
 
+	wallShareCheck is basically what you'd think it is - it is a value that keeps track of whether the server has shared wall data with the player.  as I explain below, we need this because we only every want this data to be shared to a client once, when they first join.  
+
 	At this point there is an If statement with three options:- 
 	-	if wallShareCheck = False, then a json file consisting of the board width, board height, and lists containing the X position, Y position, X length and Y length of each wall in the playable area, is sent back to the client.  Every clients wallShareCheck value will be False at first, so every client will fall into this option when they send their first message to the server.  However once they receive this wall data their wallShareCheck is set to true - this means that they only ever fall into this option once.    
 	-	if playerName does NOT equal "Display1234567890", then step 4 and onwards are followed.  
 	- For all other clients that don't fall into the other two options (clients with the username "Display1234567890" who have already recieved their the wall data message, which is to say the display after its gotten its copy of the wall data), only step 7 and 8 are followed.  
 
-4. The players name and websocket ID are added to a dictionary, along with the names and websocket IDs of all other connected players.  This means that when a websocket connected is severed (e.g. a player disconnects), we can easily look up which player this websocket connection corresponds to, and remove them from the player dictionary defined in step 6.  
+5. The players name and websocket ID are added to a dictionary, along with the names and websocket IDs of all other connected players.  This means that when a websocket connected is severed (e.g. a player disconnects), we can easily look up which player this websocket connection corresponds to, and remove them from the player dictionary defined in step 6.  
 
-5. Checks that the players X and Y positions fall within legal areas (i.e Isn’t outside of the playable area or inside a wall).  If the positions values fall within illegal areas, new corrected values are inserted into the players stats.  There are two different ways that new positions are calculated - if a player is inside a wall, then they are moved to the nearest position outside of the wall.  If they are outside of the playable area, they’re just plopped in a random place inside (This can sometimes result in the player being places in a wall, but they’ll get bumped out into a legal position on the very next frame so its not really an issue).  
+6. Checks that the players X and Y positions fall within legal areas (i.e Isn’t outside of the playable area or inside a wall).  If the positions values fall within illegal areas, new corrected values are inserted into the players stats.  There are two different ways that new positions are calculated - if a player is inside a wall, then they are moved to the nearest position outside of the wall.  If they are outside of the playable area, they’re just plopped in a random place inside (This can sometimes result in the player being places in a wall, but they’ll get bumped out into a legal position on the very next frame so its not really an issue).  
 
-6. The players corrected stats are then placed in a larger dictionary that contains the stats of every connected player.  
+7. The players corrected stats are then placed in a larger dictionary that contains the stats of every connected player.  
 
-7. This full dictionary is then sent back to the client.  The script then sleeps for some pre-defined period (currently 1/60 of a second).  
+8. This full dictionary is then sent back to the client.  The script then sleeps for some pre-defined period (currently 1/60 of a second).  
 
-8. The while loop then starts over (see step 3 and onwards).  
+9. The while loop then starts over (see step 3 and onwards).  
 
 
 
