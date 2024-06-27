@@ -4,8 +4,8 @@ import pygame
 import random
 import json
 
-boardWidth = 1000
-boardHeight = 750
+boardWidth = 750
+boardHeight = 500
 playerRadii = int(boardHeight / (100/3))
 clock = pygame.time.Clock()
 playerList = {}
