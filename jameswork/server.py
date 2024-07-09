@@ -4,8 +4,8 @@ import pygame
 import random
 import json
 
-boardWidth = 750
-boardHeight = 500
+boardWidth = 1200
+boardHeight = 800
 playerRadii = int(boardHeight / (100/3))
 clock = pygame.time.Clock()
 playerList = {}
@@ -61,6 +61,7 @@ async def echo(websocket, path):
             
             if playerStats[6] == False:
                 await websocket.send(json.dumps(wallDefs)) # We want to share the details of the window size and wall positions to the display, but we only want to send this info once; when the display first connects.  To this end, when the display connects to the server, the first message the server sends to it is the wall info instead of the player list.  The display is expecting this one-off message, so it is able to process that data as wall info before going to on process every following message as player info.  
+                #print("I have sent", playerName, "a copy of the wall data")
             
             elif playerName != "Display1234567890": # This is an intentionally odd username to minimise the chance of a player picking it.  We don't want the display client to be put on playerList, because it isn't a player, so we filter it out by checking for its specific username.  
                 playerList[playerName] = playerStats
@@ -89,6 +90,7 @@ async def echo(websocket, path):
                 
             else:
                 await websocket.send(json.dumps(playerList))
+                #print("I am now communicating back and forth with the display")
                 
     except Exception as e:
         print("Client error - ",e)
