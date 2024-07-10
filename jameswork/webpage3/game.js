@@ -1,15 +1,26 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
+const plotCanvas = document.getElementById('plotCanvas');
+const ctx2 = plotCanvas.getContext('2d');
+const barCanvas = document.getElementById('barCanvas');
+const ctx3 = barCanvas.getContext('2d');
+
 const uri = "ws://localhost:8765";
-const div = document.getElementById("myDiv");
+const goodGreen = 'rgb(0,255,38)';
 let running = true;
 let wallShareCheck = false;
+
 let wallDefs = [];
 let playerList = [];
+let uniqueVirus = [];
+let viralCount = {};
+let viralCountHist = [];
+let healthyPlayers;
 let playerRadii;
 let dummyPlayerInfo = {"Display1234567890": [0, 0, 0, 0, 0, 0, wallShareCheck]};
 let counter = 0;
 let color;
+let labels = [];
 
 async function interlinked() {
     const websocket = new WebSocket(uri);
@@ -22,6 +33,10 @@ async function interlinked() {
                 wallDefs = JSON.parse(message);
                 canvas.width = wallDefs[0];
                 canvas.height = wallDefs[1];
+                plotCanvas.width = 300;
+                plotCanvas.height = wallDefs[1];
+                barCanvas.width = wallDefs[0];
+                barCanvas.height = 800;
                 playerRadii = Math.floor(wallDefs[1] / (100 / 3));
                 wallShareCheck = true;
                 dummyPlayerInfo = {"Display1234567890": [0, 0, 0, 0, 0, 0, wallShareCheck]};
@@ -51,6 +66,32 @@ async function interlinked() {
         });
     }
 
+    function colourFinder(virus, infStatus) {
+        let rMod = 0, gMod = 0, bMod = 0;
+        if (virus.length > 2) {
+            let virusIntefied = 0;
+            for (const char of virus) {
+                virusIntefied += char.charCodeAt(0);
+            }
+            const virusStr = virusIntefied.toString();
+            const first_two_digits = parseInt(virusStr.slice(0, 2));
+            let last_two_digits = parseInt(virusStr.slice(-2));
+            if (last_two_digits < 6) last_two_digits = 99;
+
+            if (virusIntefied === 1998) {
+                rMod = 255;
+                gMod = 153;
+                bMod = 255;
+            } else {
+                rMod = 255 - (30 * (10 / last_two_digits));
+                gMod = 150 * (10 / first_two_digits);
+                bMod = 125 * (10 / last_two_digits);
+            }
+
+            return color = infStatus ? `rgb(${rMod}, ${gMod}, ${bMod})` : goodGreen;
+        }
+    }
+
     function updateGame() {
         websocket.send(JSON.stringify(dummyPlayerInfo));
         waitForWebSocketMessage()
@@ -58,8 +99,9 @@ async function interlinked() {
                 //console.log(message);
 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx2.clearRect(0, 0, 300, canvas.height);
+                //ctx.fillStyle = 'white';
+                //ctx.fillRect(0, 0, canvas.width, canvas.height);
 
                 ctx.fillStyle = 'blue';
                 for (let i = 2; i < wallDefs.length; i++) {
@@ -70,31 +112,16 @@ async function interlinked() {
                 playerList = JSON.parse(message);
                 for (const [name, stats] of Object.entries(playerList)) {
                     const [x, y, playerInfStatus, playerVirus] = stats;
-        
-                    let rMod = 0, gMod = 0, bMod = 0;
-                    if (playerVirus.length > 0) {
-                        let virusIntefied = 0;
-                        for (const char of playerVirus) {
-                            virusIntefied += char.charCodeAt(0);
-                        }
-                        const virusStr = virusIntefied.toString();
-                        const first_two_digits = parseInt(virusStr.slice(0, 2));
-                        let last_two_digits = parseInt(virusStr.slice(-2));
-                        if (last_two_digits < 6) last_two_digits = 99;
-        
-                        if (virusIntefied === 1998) {
-                            rMod = 255;
-                            gMod = 153;
-                            bMod = 255;
-                        } else {
-                            rMod = 255 - (30 * (10 / last_two_digits));
-                            gMod = 150 * (10 / first_two_digits);
-                            bMod = 125 * (10 / last_two_digits);
-                        }
-        
-                        color = playerInfStatus ? `rgb(${rMod}, ${gMod}, ${bMod})` : 'green';
+
+                    if (playerInfStatus) {
+                        uniqueVirus.push(playerVirus);
+                    }
+                    else {
+                        healthyPlayers += 1;
                     }
                     
+                    color = colourFinder(playerVirus, playerInfStatus);
+           
                     ctx.fillStyle = color;
                     ctx.fillRect(x - playerRadii, y - playerRadii, playerRadii * 2, playerRadii * 2);
         
@@ -104,11 +131,75 @@ async function interlinked() {
                     ctx.fillStyle = 'black';
                     ctx.font = `${playerRadii}px Arial`;
                     ctx.textAlign = 'center';
-                    ctx.fillText(name, x, y);
-        
-                    //document.getElementById('testDiv').innerHTML = x + ", " + y + ", " + color + ", " + playerRadii;
+                    ctx.fillText(name, x, y+(playerRadii/4));
+
                 }
 
+                uniqueVirus.forEach(function(num) {
+                    viralCount[num] = (viralCount[num] || 0) + 1;
+                });
+
+                let totalPlayers = Object.keys(playerList).length;
+
+                ctx2.fillStyle = goodGreen;
+                ctx2.fillRect(0, 0, 300*(healthyPlayers/totalPlayers), 100);
+
+                ctx2.fillStyle = "blue";
+                ctx2.fillRect(0, 100, 300, 10);
+
+                ctx2.fillStyle = 'black';
+                ctx2.font = "30px Arial";
+                ctx2.textAlign = 'center';
+                if (healthyPlayers <= 0) {
+                    ctx2.fillText("Everyone is infected!", 150, 60);
+                }
+                else {
+                    ctx2.fillText("Healthy players: " + healthyPlayers, 150, 60);
+                }
+
+                for (let key in viralCount) {
+                    counter += 1;
+                    ctx2.fillStyle = colourFinder(key,true);
+                    ctx2.fillRect(0, 10+(100*counter), 300*(viralCount[key]/totalPlayers), 100);
+
+                    ctx2.fillStyle = 'black';
+                    ctx2.font = "30px Arial";
+                    ctx2.textAlign = 'center';
+                    ctx2.fillText(key + ": " + viralCount[key], 150, 70 + (100*counter));
+                }
+
+                uniqueVirus = [];
+                healthyPlayers = 0;
+                counter = 0;
+
+                viralCountHist.push(viralCount);
+                labels.push(labels.length + 1); // Use index as label
+                viralCount = {};
+
+                //There is a way to create the bar-chart that i want without using this chart.js plug-in.  You'd create rectangles and scale them horizontally depending on the length of lables.  But currently there is the worlds most piercing alarm sounding and its sort of taken my ability to think from me.  It will have to wait.  
+
+                const barChart = new Chart(ctx3, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: '# of Values',
+                            datasets: viralCountHist,
+                            backgroundColor: 'rgba(75, 192, 192)',
+                            barPercentage: 1.0,       // Make bars full width
+                            categoryPercentage: 1.0 
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+
+                barChart.update();
                 requestAnimationFrame(updateGame);  // Schedule the next frame
             })
             .catch((error) => {

@@ -1,14 +1,25 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Infection Sim JS client test</title>
+    <title>Infection Simulation</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
-    <div id="testDiv"></div>
-    <canvas id="gameCanvas"></canvas>
+    <div class="canvasContainer">
+        <div class="gameAndPlotContainer">
+            <canvas id="gameCanvas" class="gameCanvas"></canvas>
+            <canvas id="plotCanvas"></canvas>
+        </div>
+        <canvas id="barCanvas"></canvas>    
+    </div> 
     <script src="game.js"></script>
 </body>
+
 </html>

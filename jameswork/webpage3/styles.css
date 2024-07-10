@@ -1,12 +1,32 @@
 body {
-    margin: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     height: 100vh;
     background-color: white;
 }
 
-canvas {
-    border: 1px solid black;
+canvas{
+    border: 10px solid blue;
+    margin: 5px; 
 }
+
+.canvasContainer {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: block;
+}
+
+.gameAndPlotContainer {
+    display: flex;
+}
+
+.gameCanvas {
+    background: url('assets/epcc.png') no-repeat center center;
+    background-size: 600px;
+}
+
+.lineCanvas {
+    top: 900px;
+}
+
+

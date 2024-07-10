@@ -2,9 +2,9 @@ import math
 import random
 import numpy as np
 
-playerName = "Stumpy"
+playerName = "Forest Chump"
 infStatus = True
-virus = "Shrinking Sickness"
+virus = "Odd looking"
 infDist = 200 # This is a distance in units.  I think the unit is a pixel?  
 infStrength = 20 # This is a percentage.  
 

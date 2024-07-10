@@ -4,7 +4,7 @@ import numpy as np
 
 playerName = "Lumpy"
 infStatus = False
-virus = "Shrinking Sickness"
+virus = "Ugly"
 infDist = 200 # This is a distance in units.  I think the unit is a pixel?  
 infStrength = 20 # This is a percentage.  
 
