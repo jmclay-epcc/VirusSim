@@ -11,6 +11,8 @@ clock = pygame.time.Clock()
 playerList = {}
 websocketDict = {}
 
+fps = 1/40
+
 wallThickness = boardHeight / 10
 wallDefs = [boardWidth,
             boardHeight,
@@ -57,7 +59,7 @@ async def echo(websocket, path):
             messageDict = json.loads(message)
             playerName, playerStats = next(iter(messageDict.items()))
             websocketDict[websocket] = playerName
-            await asyncio.sleep(1/60)
+            await asyncio.sleep(fps)
             
             if playerStats[6] == False:
                 await websocket.send(json.dumps(wallDefs)) # We want to share the details of the window size and wall positions to the display, but we only want to send this info once; when the display first connects.  To this end, when the display connects to the server, the first message the server sends to it is the wall info instead of the player list.  The display is expecting this one-off message, so it is able to process that data as wall info before going to on process every following message as player info.  

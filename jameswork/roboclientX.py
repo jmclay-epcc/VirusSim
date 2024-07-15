@@ -1,7 +1,7 @@
 import pygame
 import asyncio
 import websockets
-import InfectionLogic3 as infLog
+import InfectionLogicX as infLog
 import random
 import json
 
@@ -39,10 +39,6 @@ async def interlinked():
         global infDist
         global infStrength
         running = True
-        upCol = "gray"
-        downCol = "gray"
-        leftCol = "gray"
-        rightCol = "gray"
         
         await websocket.send(json.dumps(playerInfo))
         initialWallShare = await websocket.recv()

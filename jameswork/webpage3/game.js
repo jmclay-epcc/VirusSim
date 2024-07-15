@@ -7,6 +7,7 @@ const ctx3 = barCanvas.getContext('2d');
 
 const uri = "ws://localhost:8765";
 const goodGreen = 'rgb(0,255,38)';
+const barCanvasHeight = 400;
 let running = true;
 let wallShareCheck = false;
 
@@ -20,7 +21,8 @@ let playerRadii;
 let dummyPlayerInfo = {"Display1234567890": [0, 0, 0, 0, 0, 0, wallShareCheck]};
 let counter = 0;
 let color;
-let labels = [];
+let frameNo = [];
+let playerCount = []; //this is a really hideous solution to this problem.  Do not judge me let ye be judged.  
 
 async function interlinked() {
     const websocket = new WebSocket(uri);
@@ -36,7 +38,7 @@ async function interlinked() {
                 plotCanvas.width = 300;
                 plotCanvas.height = wallDefs[1];
                 barCanvas.width = wallDefs[0];
-                barCanvas.height = 800;
+                barCanvas.height = barCanvasHeight;
                 playerRadii = Math.floor(wallDefs[1] / (100 / 3));
                 wallShareCheck = true;
                 dummyPlayerInfo = {"Display1234567890": [0, 0, 0, 0, 0, 0, wallShareCheck]};
@@ -99,9 +101,10 @@ async function interlinked() {
                 //console.log(message);
 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx2.clearRect(0, 0, 300, canvas.height);
-                //ctx.fillStyle = 'white';
-                //ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx2.clearRect(0, 0, plotCanvas.width, plotCanvas.height);
+                ctx3.clearRect(0, 0, barCanvas.width, barCanvas.height);
+                ctx3.fillStyle = "gray";
+                ctx3.fillRect(0, 0, barCanvas.width, barCanvas.height);
 
                 ctx.fillStyle = 'blue';
                 for (let i = 2; i < wallDefs.length; i++) {
@@ -150,8 +153,11 @@ async function interlinked() {
                 ctx2.fillStyle = 'black';
                 ctx2.font = "30px Arial";
                 ctx2.textAlign = 'center';
-                if (healthyPlayers <= 0) {
+                if (healthyPlayers <= 0 && totalPlayers > 0) {
                     ctx2.fillText("Everyone is infected!", 150, 60);
+                }
+                else if (totalPlayers == 0) {
+                    ctx2.fillText("No one is online :(", 150, 60);
                 }
                 else {
                     ctx2.fillText("Healthy players: " + healthyPlayers, 150, 60);
@@ -173,33 +179,30 @@ async function interlinked() {
                 counter = 0;
 
                 viralCountHist.push(viralCount);
-                labels.push(labels.length + 1); // Use index as label
+                playerCount.push(totalPlayers);
+                frameNo.push(frameNo.length + 1); // Use index as label
                 viralCount = {};
 
-                //There is a way to create the bar-chart that i want without using this chart.js plug-in.  You'd create rectangles and scale them horizontally depending on the length of lables.  But currently there is the worlds most piercing alarm sounding and its sort of taken my ability to think from me.  It will have to wait.  
-
-                const barChart = new Chart(ctx3, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: '# of Values',
-                            datasets: viralCountHist,
-                            backgroundColor: 'rgba(75, 192, 192)',
-                            barPercentage: 1.0,       // Make bars full width
-                            categoryPercentage: 1.0 
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
+                for (let frame of frameNo) {
+                    barData = viralCountHist[frame-1];
+                    let pastPlayerCount = playerCount[frame-1];
+                    //document.getElementById("testDiv").innerText = JSON.stringify(barData);
+                    let prevBarHeight = 0;
+                    let totalInfected = 0;
+                    for (let key in barData) {
+                        //document.getElementById("testDiv2").innerText = prevKey;
+                        ctx3.fillStyle = colourFinder(key,true)
+                        ctx3.fillRect(((wallDefs[0]/frameNo.length)*(frame-1)), prevBarHeight, 2*(wallDefs[0]/frameNo.length), (barCanvasHeight*barData[key]/pastPlayerCount));
+                        
+                        prevBarHeight += barCanvasHeight*barData[key]/pastPlayerCount;
+                        totalInfected += barData[key];
                     }
-                });
+                    ctx3.fillStyle = goodGreen;
+                    ctx3.fillRect(((wallDefs[0]/frameNo.length)*(frame-1)), prevBarHeight, 2*(wallDefs[0]/frameNo.length), (barCanvasHeight*(pastPlayerCount-totalInfected)/pastPlayerCount)); 
+                }
 
-                barChart.update();
+                //document.getElementById("testDiv").innerText = frameNo;
+
                 requestAnimationFrame(updateGame);  // Schedule the next frame
             })
             .catch((error) => {

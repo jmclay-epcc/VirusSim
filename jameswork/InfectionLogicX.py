@@ -1,10 +1,14 @@
 import math
 import random
 import numpy as np
+import nltk
+from nltk.corpus import words
 
-playerName = "Lumpy"
+nltk.download('words')
+
+playerName = random.choice(words.words())
 infStatus = False
-virus = "Ugly"
+virus = random.choice(words.words())
 infDist = 200 # This is a distance in units.  I think the unit is a pixel?  
 infStrength = 20 # This is a percentage.  
 
@@ -22,7 +26,7 @@ def infectionLogicDef(playerList):
     virus = playerStats[3]
     infDist = playerStats[4]
     infStrength = playerStats[5]
-    
+        
     if infStatus == False and counter >= (infCheckTime * 60):
         # The next chuck of script to see how close every other player in the dictionary is to current player, and then determines if current player can and should be infected by them.  
         for nthPlayer, nthStats in playerList.items(): # Loop through the list of players
