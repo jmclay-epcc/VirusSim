@@ -4,14 +4,14 @@ import pygame
 import random
 import json
 
-boardWidth = 1200
-boardHeight = 800
-playerRadii = int(boardHeight / (100/3))
+boardWidth = 1800
+boardHeight = 1000
+playerRadii = int(boardHeight / 35)
 clock = pygame.time.Clock()
 playerList = {}
 websocketDict = {}
 
-fps = 1/40
+fps = 1/80
 
 wallThickness = boardHeight / 10
 wallDefs = [boardWidth,

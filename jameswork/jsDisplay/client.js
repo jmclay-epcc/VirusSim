@@ -23,6 +23,7 @@ let counter = 0;
 let color;
 let frameNo = [];
 let playerCount = []; //this is a really hideous solution to this problem.  Do not judge me let ye be judged.  
+let viralStats = {} //This is an even uglier solution to a different problem.  Oops! 
 
 async function interlinked() {
     const websocket = new WebSocket(uri);
@@ -35,11 +36,11 @@ async function interlinked() {
                 wallDefs = JSON.parse(message);
                 canvas.width = wallDefs[0];
                 canvas.height = wallDefs[1];
-                plotCanvas.width = 300;
+                plotCanvas.width = 600;
                 plotCanvas.height = wallDefs[1];
                 barCanvas.width = wallDefs[0];
                 barCanvas.height = barCanvasHeight;
-                playerRadii = Math.floor(wallDefs[1] / (100 / 3));
+                playerRadii = Math.floor(wallDefs[1] / 45);
                 wallShareCheck = true;
                 dummyPlayerInfo = {"Display1234567890": [0, 0, 0, 0, 0, 0, wallShareCheck]};
                 updateGame();
@@ -114,10 +115,11 @@ async function interlinked() {
 
                 playerList = JSON.parse(message);
                 for (const [name, stats] of Object.entries(playerList)) {
-                    const [x, y, playerInfStatus, playerVirus] = stats;
+                    const [x, y, playerInfStatus, playerVirus, infDist, infStrength] = stats;
 
                     if (playerInfStatus) {
                         uniqueVirus.push(playerVirus);
+                        viralStats[playerVirus] = [infDist,infStrength];
                     }
                     else {
                         healthyPlayers += 1;
@@ -127,9 +129,6 @@ async function interlinked() {
            
                     ctx.fillStyle = color;
                     ctx.fillRect(x - playerRadii, y - playerRadii, playerRadii * 2, playerRadii * 2);
-        
-                    //ctx.fillStyle = 'black';
-                    //ctx.fillRect(0, 0, 100, 100);
 
                     ctx.fillStyle = 'black';
                     ctx.font = `${playerRadii}px Arial`;
@@ -148,7 +147,8 @@ async function interlinked() {
                 ctx2.fillRect(0, 0, 300*(healthyPlayers/totalPlayers), 100);
 
                 ctx2.fillStyle = "blue";
-                ctx2.fillRect(0, 100, 300, 10);
+                ctx2.fillRect(0, 100, 600, 10);
+                ctx2.fillRect(300, 0, 10, wallDefs[1]);
 
                 ctx2.fillStyle = 'black';
                 ctx2.font = "30px Arial";
@@ -163,7 +163,10 @@ async function interlinked() {
                     ctx2.fillText("Healthy players: " + healthyPlayers, 150, 60);
                 }
 
-                for (let key in viralCount) {
+                ctx2.fillText("Range & Strength", 450, 60);
+
+                let sortedKeys = Object.keys(viralCount).sort();
+                sortedKeys.forEach(key => {
                     counter += 1;
                     ctx2.fillStyle = colourFinder(key,true);
                     ctx2.fillRect(0, 10+(100*counter), 300*(viralCount[key]/totalPlayers), 100);
@@ -172,7 +175,8 @@ async function interlinked() {
                     ctx2.font = "30px Arial";
                     ctx2.textAlign = 'center';
                     ctx2.fillText(key + ": " + viralCount[key], 150, 70 + (100*counter));
-                }
+                    ctx2.fillText(viralStats[key], 450, 70 + (100*counter));
+                });
 
                 uniqueVirus = [];
                 healthyPlayers = 0;
@@ -189,14 +193,16 @@ async function interlinked() {
                     //document.getElementById("testDiv").innerText = JSON.stringify(barData);
                     let prevBarHeight = 0;
                     let totalInfected = 0;
-                    for (let key in barData) {
+
+                    let sortedKeys2 = Object.keys(barData).sort();
+                    sortedKeys2.forEach(key => {
                         //document.getElementById("testDiv2").innerText = prevKey;
                         ctx3.fillStyle = colourFinder(key,true)
                         ctx3.fillRect(((wallDefs[0]/frameNo.length)*(frame-1)), prevBarHeight, 2*(wallDefs[0]/frameNo.length), (barCanvasHeight*barData[key]/pastPlayerCount));
                         
                         prevBarHeight += barCanvasHeight*barData[key]/pastPlayerCount;
                         totalInfected += barData[key];
-                    }
+                    });
                     ctx3.fillStyle = goodGreen;
                     ctx3.fillRect(((wallDefs[0]/frameNo.length)*(frame-1)), prevBarHeight, 2*(wallDefs[0]/frameNo.length), (barCanvasHeight*(pastPlayerCount-totalInfected)/pastPlayerCount)); 
                 }
