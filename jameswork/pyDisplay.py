@@ -1,7 +1,6 @@
 import pygame
 import asyncio
 import websockets
-import VirusSim.jameswork.pyClient.InfectionLogic as infLog
 import json
 
 pygame.init()
