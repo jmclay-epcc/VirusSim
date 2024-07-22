@@ -2,7 +2,7 @@ import threading
 import subprocess
 import time
 
-autoClientCount = 200
+autoClientCount = 20
      
 def run_script(script_name):
     subprocess.run(["python", script_name])

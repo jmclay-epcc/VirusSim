@@ -89,7 +89,7 @@ async def interlinked():
 
             keys = pygame.key.get_pressed()
             
-            baseStep = int(playerRadii * 1/3) # This makes sure that the speed of the player is always proportional to its radii.  
+            baseStep = int(playerRadii * 2/5) # This makes sure that the speed of the player is always proportional to its radii.  
             if sum(keys) == 2:  
                 step = math.sqrt((baseStep*baseStep)/2) 
             else:

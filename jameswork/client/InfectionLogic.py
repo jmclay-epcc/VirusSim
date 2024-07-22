@@ -4,9 +4,9 @@ import numpy as np
 
 playerName = "James Mclay"
 infStatus = True
-virus = "Worms"
-infDist = 300 # This is a distance in units.  I think the unit is a pixel?  
-infStrength = 75 # This is a percentage.  
+virus = "Ringworm"
+infDist = 75 # This is a distance in units.  I think the unit is a pixel?  
+infStrength = 90 # This is a percentage.  
 
 infCheckTime = 2
 immunity = 50

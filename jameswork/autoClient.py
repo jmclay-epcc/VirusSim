@@ -117,7 +117,7 @@ async def interlinked():
             else:
                 playerDir[random.choice([0,1])] = 0
                 
-            baseStep = int(playerRadii * 1/3) 
+            baseStep = int(playerRadii * 2/5) 
             if (playerDir[0] == 1 or playerDir[0] == -1) and (playerDir[1] == 1 or playerDir[1] == -1):
                 step = math.sqrt((baseStep*baseStep)/2) 
             else:
@@ -140,12 +140,3 @@ async def interlinked():
 # ----------------
 
 asyncio.run(interlinked())
-
-
-# This build does have the fun viral fighting that i wanted, there reinfections allow nearly extinct viruses to rise up from the ashes and compete again, but... i don't know.  The immunity implimentation just feels wonky to me.  Arbitrary.  The rules are just tuned to give the result that i wanted, they don't feel "realistic" to me.  
-# Immuity is the ability to "slap down" a potential viral infection when it enters your body.  IN essenese, this is what the infOddsCheck does - it takes in the value of infOdds and decided if the virus should take hold or be slapped down depending on if its bigger than some random value.  Ths is analogous to immunity - a higher random value results in a lower chance of infection.  
-# So really, a good implimentation might be to replace infOddsCheck with immunity.  In this configuration, the randomness of whehter or not someone infects lies in how far away they are from you, and what their viral stats are.  Those factors produce a sudo-random number, which is then compared against the constant values of immunity.  
-# The concern then is that the odds of infection are no longer random.  They are directly proportional to your immunity, and your distance from any infected player.  The currently setup is also proportional to this, biut the extra randomness provided by infOddsCheck adds another layer - a player with high immunity who is far from any infected players could still get infected, but the odds are very low.  
-# If i was to replace infOddsCheck with a constant immunity value, then a player with high immunity could easily NEVER be at real risk of infection.  
-
-# Immunity also plays a greater part with fighting disease than the odds of catching on.  The strength of your immune system determines how quickly you can overcome a virus.  There is no implimentation of this concept at all currently.  

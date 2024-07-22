@@ -16,10 +16,10 @@ fps = 1/80
 wallThickness = boardHeight / 10
 wallDefs = [boardWidth,
             boardHeight,
-            (-40, -40, 40, boardHeight+40), # The first four walls detailed are the boundary walls for the playable area.  Don't change these values! Don't even look them! 
-            (-40, -40, boardWidth+40, 40),  # These numbers represent the rectangles X axis position, Y axis position, Length along X axis and length along Y axis.  Its also worth pointing out that this is measuring from the top-left corner, so the y-axis is upside down compared to a regular graph.  Its the same for JS though so it shouldnt be an issue.  
-            (boardWidth , 0, 40, boardHeight),
-            (-40, boardHeight, boardWidth+40, 40),
+            (-7, -7, 7, boardHeight+14), # The first four walls detailed are the boundary walls for the playable area.  Don't change these values! Don't even look them! 
+            (-7, -7, boardWidth+14, 7),  # These numbers represent the rectangles X axis position, Y axis position, Length along X axis and length along Y axis.  Its also worth pointing out that this is measuring from the top-left corner, so the y-axis is upside down compared to a regular graph.  Its the same for JS though so it shouldnt be an issue.  
+            (boardWidth , 0, 7, boardHeight),
+            (-7, boardHeight, boardWidth+14, 7),
 # - Horizontal lines
             (boardWidth * 1/8, boardHeight * 2/8, boardWidth * 2/8, wallThickness), # Top-left
             (boardWidth * 1/8, -wallThickness + boardHeight * 6/8, boardWidth * 2/8, wallThickness), # Bottom-left

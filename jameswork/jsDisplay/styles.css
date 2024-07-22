@@ -1,32 +1,37 @@
 body {
     height: 100vh;
+    background-color: rgb(233, 233, 233);
+}
+
+.content {
+    width: 70%;
+    height: 100%;
+    transform: translate(21.43%, -10px);
     background-color: white;
 }
 
-canvas{
-    border: 10px solid blue;
-    margin: 5px; 
+.header {
+    width: 100%;
+    height: auto;
 }
 
-.canvasContainer {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: block;
+.textHeader {
+    padding: 1.5vw;
+    text-align: left;
+    background: #3a414a;
+    color: white;
+    font-size: 1.6vw;
+    transform: translate(0, -5%);
 }
 
-.gameAndPlotContainer {
-    display: flex;
-}
 
 .gameCanvas {
-    background: url('assets/epcc.png') no-repeat center center;
-    background-size: 600px;
+    position: absolute;
+    width: 100%;
+    height: auto;
+    left: 50%;
+    transform: translate(-50%, -15%) scale(65%);
+
+    background-color: white;
+
 }
-
-.lineCanvas {
-    top: 900px;
-}
-
-
