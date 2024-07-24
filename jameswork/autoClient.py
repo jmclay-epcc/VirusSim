@@ -21,12 +21,7 @@ playerDir = [random.randint(-1,1),random.randint(-1,1)]
 wallShareCheck = False
 playerInfo = {}
 wallDefs = []
-
-d10 = random.randint(1,35)
-if d10 == 5:
-    infStatus = True
-else:
-    infStatus = False
+infStatus = False
 
 playerInfo[playerName] = [playerPos[0],playerPos[1],infStatus,virus,infDist,infStrength,wallShareCheck]
 

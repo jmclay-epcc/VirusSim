@@ -5,9 +5,13 @@ body {
 
 .content {
     width: 70%;
-    height: 100%;
     transform: translate(21.43%, -10px);
+}
+
+.backdrop {
     background-color: white;
+    height: 50vw;
+    transform: translate(0, -0.5%);
 }
 
 .header {
@@ -24,13 +28,12 @@ body {
     transform: translate(0, -5%);
 }
 
-
 .gameCanvas {
     position: absolute;
     width: 100%;
     height: auto;
     left: 50%;
-    transform: translate(-50%, -15%) scale(65%);
+    transform: translate(-50%, -120%) scale(90%);
 
     background-color: white;
 

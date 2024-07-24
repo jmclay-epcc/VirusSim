@@ -5,6 +5,7 @@ const uri = "ws://localhost:8765";
 const goodGreen = 'rgb(0,255,38)';
 const margin = 40;
 const borderWidth = 25;
+const img = new Image();
 let running = true;
 let wallShareCheck = false;
 
@@ -21,6 +22,9 @@ let color;
 let frameNo = [];
 let playerCount = []; //this is a really hideous solution to this problem.  Do not judge me let ye be judged.  
 let viralStats = {} //This is an even uglier solution to a different problem.  Oops! 
+let logoScale = 1.6;
+let logoX = 568 * logoScale;
+let logoY = 343 * logoScale; //This is REALLY lazy.  This is just the dimensions of the epcc logo in the middle of the board, manually typed in.  Very bad.  
 
 async function interlinked() {
     const websocket = new WebSocket(uri);
@@ -114,6 +118,9 @@ async function interlinked() {
                 ctx.clearRect(canvasOrigX, canvasOrigY, canvas.width, canvas.height);
                 ctx.fillStyle = "gray";
                 ctx.fillRect(barOrigX, barOrigY, barWidth, barHeight);
+
+                ctx.drawImage(img, boardOrigX + (boardWidth - logoX)/2, boardOrigY + (boardHeight - logoY)/2, logoX, logoY);
+                img.src = "assets/epcc.png";
 
                 ctx.fillStyle = 'blue';
                 for (let i = 2; i < wallDefs.length; i++) {
