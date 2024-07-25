@@ -18,16 +18,16 @@ def compassDir(nthPlayer, infOdds, nthPosX, nthPosY, playerPos, dist):
             xCard = "west"
         elif nthPosX > playerPos[0]:
             xCard = "east"
-        elif abs(nthPosX - playerPos[0]) < 50:
-            xCard = ""
+    elif abs(nthPosX - playerPos[0]) < 50:
+        xCard = ""
                     
-        if abs(nthPosY - playerPos[1]) >= 50:
-            if nthPosY < playerPos[1]:
-                yCard = "north"
-            elif nthPosY > playerPos[1]:
-                yCard = "south"
-            elif abs(nthPosY - playerPos[1]) < 50:
-                yCard = ""
+    if abs(nthPosY - playerPos[1]) >= 50:
+        if nthPosY < playerPos[1]:
+            yCard = "north"
+        elif nthPosY > playerPos[1]:
+            yCard = "south"
+    elif abs(nthPosY - playerPos[1]) < 50:
+        yCard = ""
                     
     print("----------",playerName,"----------")
     print("You current have a", round(infOdds,2),'%', "chance of being infected by",nthPlayer,"!")

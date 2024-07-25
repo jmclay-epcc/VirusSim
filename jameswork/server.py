@@ -11,10 +11,9 @@ clock = pygame.time.Clock()
 playerList = {}
 websocketDict = {}
 cureOverwrite = False
-infectedG = ""
-infectedB = ""
-infectedLW = ""
-infectedSS = ""
+infStatusRemote = ""
+infDistRemote = 0
+infStrengthRemote = 0
 
 fps = 1/80
 
@@ -59,10 +58,9 @@ async def echo(websocket, path):
         global playerList
         global wallDefs
         global cureOverwrite
-        global infectedG
-        global infectedB
-        global infectedLW
-        global infectedSS
+        global infStatusRemote
+        global infDistRemote
+        global infStrengthRemote
 
         while True:
             message = await websocket.recv()
@@ -84,14 +82,11 @@ async def echo(websocket, path):
                     print(command)
                     if command == "Cure all": 
                         cureOverwrite = True
-                    if command == "Infect player - long range, weak":
-                        infectedLW = random.choice(list(playerList.keys()))
-                    if command == "Infect player - short range, strong":
-                        infectedSS = random.choice(list(playerList.keys()))
-                    if command == "Infect player - good":
-                        infectedG = random.choice(list(playerList.keys()))
-                    if command == "Infect player - bad":
-                        infectedB = random.choice(list(playerList.keys()))
+                    if command == "Infect player":
+                        infStatusRemote = random.choice(list(playerList.keys()))
+                        infDistRemote = playerStats[1]
+                        infStrengthRemote = playerStats[2]
+                        
                         
                     if command == 0:
                         cureOverwrite = False
@@ -101,30 +96,13 @@ async def echo(websocket, path):
                     
                     if cureOverwrite == True:
                         playerStats[2] = False
-                    if playerName == infectedG:
+                    if playerName == infStatusRemote:
                         playerStats[2] = True
-                        playerStats[3] = playerName + "itus"
-                        playerStats[4] = random.randint(150,200)
-                        playerStats[5] = random.randint(75,100)
-                        infectedG = ""
-                    if playerName == infectedB:
-                        playerStats[2] = True
-                        playerStats[3] = playerName + "itus"
-                        playerStats[4] = random.randint(5,40)
-                        playerStats[5] = random.randint(1,40)
-                        infectedB = ""
-                    if playerName == infectedLW:
-                        playerStats[2] = True
-                        playerStats[3] = playerName + "itus"
-                        playerStats[4] = random.randint(125,200)
-                        playerStats[5] = random.randint(10,40)
-                        infectedLW = ""
-                    if playerName == infectedSS:
-                        playerStats[2] = True
-                        playerStats[3] = playerName + "itus"
-                        playerStats[4] = random.randint(25,70)
-                        playerStats[5] = random.randint(50,100)
-                        infectedSS = ""
+                        playerStats[4] = infDistRemote
+                        playerStats[5] = infStrengthRemote
+                        infStatusRemote = ""
+                        infDistRemote = 0
+                        infStrengthRemote = 0
                     
                     for wall in walls:
                         if playerStats[0] - playerRadii < wall.right and playerStats[0] + playerRadii > wall.left and playerStats[1] - playerRadii < wall.bottom and playerStats[1] + playerRadii > wall.top: 

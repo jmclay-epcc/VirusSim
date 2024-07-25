@@ -64,7 +64,7 @@ def infectionLogicDef(playerList):
                         virus = nthVirus
                         infDist = nthInfDist
                         infStrength = nthInfStrength
-        counter = 0
+        counter = random.randint(1,115)
     else:
         counter += 1
         
