@@ -3,16 +3,17 @@ import random
 import numpy as np
 
 playerName = "James Mclay"
-infStatus = True
+infStatus = False
 virus = "Ringworm"
 infDist = 75 # This is a distance in units.  I think the unit is a pixel?  
 infStrength = 90 # This is a percentage.  
 
 infCheckTime = 2
-immunity = 50
 counter = random.randint(1,115)
 
-def compassDir(nthPlayer, infOdds, nthPosX, nthPosY, playerPos, dist):
+originalVirusName = virus
+
+def compassDir(nthPlayer, infOdds, nthPosX, nthPosY, playerPos, dist): # This definition is purely for fun, and is an example of what extra functions players could stick on.  It is not needed for the actual sim.  
     if abs(nthPosX - playerPos[0]) >= 50:
         if nthPosX < playerPos[0]:
             xCard = "west"
@@ -40,6 +41,7 @@ def compassDir(nthPlayer, infOdds, nthPosX, nthPosY, playerPos, dist):
 def infectionLogicDef(playerList):
     
     global counter
+    global originalVirusName
     
     playerStats = playerList[playerName]
     playerPos = (playerStats[0],playerStats[1])
@@ -49,7 +51,8 @@ def infectionLogicDef(playerList):
     infDist = playerStats[4]
     infStrength = playerStats[5]
     
-    #print(counter)
+    if infStatus == False:
+        virus = originalVirusName
     
     if counter >= (infCheckTime * 80) and infStatus == False:
         # The next chuck of script to see how close every other player in the dictionary is to current player, and then determines if current player can and should be infected by them.  
@@ -71,11 +74,11 @@ def infectionLogicDef(playerList):
                     compassDir(nthPlayer, infOdds, nthPosX, nthPosY, playerPos, dist)
                         
                     if infOdds > infOddsCheck: #... And compare it to the infOdds that we calculated earlier.  If the player and nth player are very close, infOdds with trend towards towards 100, which means infOddsCheck will be more likely to be lower, which means the player is more likely to be infected.  Vis versa applies.  
-                        infStatus = True
-                        virus = nthVirus
+                        infStatus = False # When the player is successfully infected, we don't just want to switch out infStatus variable from False to True.  We also want to copy over the virus characteristics from the player that we were infected by.  This way, when we go on to infected some other player, we pass on the same viral "strain".  
+                        virus = nthVirus 
                         infDist = nthInfDist
                         infStrength = nthInfStrength
-                        print("You've been infected with",virus,"!  This virus has a range of",infDist,"and a strength of",infStrength)
+                        print("You've been infected with",virus,"!")
         counter = 0
     else:
         counter += 1

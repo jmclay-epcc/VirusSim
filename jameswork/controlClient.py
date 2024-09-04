@@ -87,7 +87,7 @@ infDistScale.pack()
 infStrengthScale = tk.Scale(root,orient="horizontal",length=500,width=20,sliderlength=10,from_=0,to=200,tickinterval=50)
 infStrengthScale.pack()
 
-button = tk.Button(root, text= "Infect random player", command=lambda t=text: asyncio.run(main("Infect player")))
+button = tk.Button(root, text= "Create a patient-zero", command=lambda t=text: asyncio.run(main("Infect player")))
 button.pack(pady=10)
 
 button = tk.Button(root, text= "Spawn 100 bots! (Takes a while)", command=lambda t=text: asyncio.run(main("Spawn 100 bots!")))

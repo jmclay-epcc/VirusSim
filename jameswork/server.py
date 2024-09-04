@@ -15,7 +15,7 @@ infStatusRemote = ""
 infDistRemote = 0
 infStrengthRemote = 0
 
-fps = 1/80
+fps = 1/30
 
 wallThickness = boardHeight / 10
 wallDefs = [boardWidth,
@@ -86,8 +86,6 @@ async def echo(websocket, path):
                         infStatusRemote = random.choice(list(playerList.keys()))
                         infDistRemote = playerStats[1]
                         infStrengthRemote = playerStats[2]
-                        
-                        
                     if command == 0:
                         cureOverwrite = False
 
