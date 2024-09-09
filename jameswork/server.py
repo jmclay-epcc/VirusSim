@@ -15,7 +15,7 @@ infStatusRemote = ""
 infDistRemote = 0
 infStrengthRemote = 0
 
-fps = 1/30
+fps = 1/80
 
 wallThickness = boardHeight / 10
 wallDefs = [boardWidth,
