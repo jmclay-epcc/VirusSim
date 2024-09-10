@@ -17,7 +17,7 @@ infDist = random.randint(1,200) # This is a distance in units.  I think the uni
 infStrength = random.randint(0,100) # This is a percentage.  
 infCheckTime = 2
 counter = random.randint(1,115)
-playerPos = [300,400]
+playerPos = [300,900]
 playerDir = [random.randint(-1,1),random.randint(-1,1)]
 wallShareCheck = False
 playerInfo = {}
@@ -78,12 +78,12 @@ def infectionLogicDef(playerList):
 
 def pathFinder(playerPos, targetPos, xWalls, yWalls):
     
-    def magiciansStaff(testPoint):
+    def magiciansStaff(testPoint, TPCount):
         newTestPoints = []
-        for i in range(11):
+        for i in range(int(TPCount/2)):
             intersects = []
             intersectsSetTwo = []
-            m = math.tan(math.radians(i*17)) + 0.1 # These numbers might seem arbitrary and weird, 17 steps of 11 degrees?  Well, if you do this, you can cover the full 360 without hitting values that produce infinite gradients (remember, for every angle step here we are actually returning two legitimate test points.  The magicians staff has two ends :) ).  
+            m = math.tan(math.radians(i*(math.ceil(360/TPCount)))) + 0.1 # These numbers might seem arbitrary and weird, 17 steps of 11 degrees?  Well, if you do this, you can cover the full 360 without hitting values that produce infinite gradients (remember, for every angle step here we are actually returning two legitimate test points.  The magicians staff has two ends :) ).  
             c = -(m*testPoint[0] - testPoint[1])
             for wall in xWalls:
                 possibleIntersectY = m*wall[0] + c # The formula of a line given the gradient, c, and X
@@ -130,11 +130,12 @@ def pathFinder(playerPos, targetPos, xWalls, yWalls):
             else:
                 m = (targetTP[1] - playerTP[1])/(targetTP[0]-playerTP[0])
             c = -(m*targetTP[0] - targetTP[1])
+            
             for wall in xWalls:
-                betweenX = min(playerTP[0], targetTP[0]) < wall[0] < max(playerTP[0], targetTP[0]) # We check to see if any x-walls lie between the X values of the current playerTP and targetTP.  Since we have not yet considered the y-axis limits of the walls, this will pretty much always return True, but if by some chance it doesnt then we know there must be a clear path on the X-axis.  
-                if betweenX == True:
+                betweenX = min(playerTP[0], targetTP[0]) <= wall[0] <= max(playerTP[0], targetTP[0]) # We check to see if any x-walls lie between the X values of the current playerTP and targetTP.  Since we have not yet considered the y-axis limits of the walls, this will pretty much always return True, but if by some chance it doesnt then we know there must be a clear path on the X-axis.  
+                if betweenX == True and playerTP[0] != targetTP[0]:
                     y = m*wall[0] + c # We calculate the y-value of the intersection between the wall and the line between the player and target TPs...
-                    withinWallLims = min(wall[1], wall[2]) < y < max(wall[1], wall[2]) # ... And then check if this lies between the limits of the wall.  If it does, then this wall blocks the path.  
+                    withinWallLims = min(wall[1], wall[2]) <= y <= max(wall[1], wall[2]) # ... And then check if this lies between the limits of the wall.  If it does, then this wall blocks the path.  
                     if withinWallLims == True:
                         return False
             return True
@@ -148,10 +149,10 @@ def pathFinder(playerPos, targetPos, xWalls, yWalls):
                     m = 0.01 # IF the player and target PTs x values are the same (e.g. they lie on the same horizontal wall), then the gradient will be 0.  This is not a problem for checking the x walls, but it is for the y walls, so i am just manually correcting it to a tiny value. It introduces a small error but clears up a massive headache.  
             c = -(m*targetTP[0] - targetTP[1])
             for wall in yWalls:
-                betweenY = min(playerTP[1], targetTP[1]) < wall[0] < max(playerTP[1], targetTP[1])
-                if betweenY == True:
+                betweenY = min(playerTP[1], targetTP[1]) <= wall[0] <= max(playerTP[1], targetTP[1])
+                if betweenY == True and playerTP[1] != targetTP[1]:
                     x = (wall[0] - c)/m
-                    withinWallLims = min(wall[1], wall[2]) < x < max(wall[1], wall[2])
+                    withinWallLims = min(wall[1], wall[2]) <= x <= max(wall[1], wall[2])
                     if withinWallLims == True:
                         return False
             return True
@@ -171,23 +172,23 @@ def pathFinder(playerPos, targetPos, xWalls, yWalls):
                 furthestPlayerTPDist = dist1
                 furthestPlayerTP = playerTP
             for targetTP in targetTPList:
-                dist2 = math.hypot((playerTP[0]-targetTP[0]),(playerTP[1]-targetTP[1])) # this is the distance between the current playerTP and the current targetTP.  We want to keep track of the playerTP with the smallest value here.  
-                if dist2 < bestTPDist:
-                    clearPathX = xWallChecker(playerTP,targetTP)
-                    clearPathY = yWallChecker(playerTP,targetTP)
+                clearPathX = xWallChecker(playerTP,targetTP)
+                clearPathY = yWallChecker(playerTP,targetTP)
                                     
-                    if clearPathX == True and clearPathY == True:
+                if clearPathX == True and clearPathY == True:
+                    dist2 = math.hypot((playerTP[0]-targetTP[0]),(playerTP[1]-targetTP[1])) # this is the distance between the current playerTP and the current targetTP.  We want to keep track of the playerTP with the smallest value here.  
+                    if dist2 < bestTPDist:
                         bestTPDist = dist2
                         bestTP = playerTP
-         
+                        
         if bestTPDist == 50000:       
             return furthestPlayerTP # If we aren't able to identify a playerTP with a clear line of sight to either the target or a targetTP, then we will return this value by default.  This should at the very least coax the player into a more favorable map position (logically i think it should push them towards the centre but im more than expecting there to be some edge-case where it gets wedged in a corner or something).  
         else:
             return bestTP # If we are able to identify one or more playerTPs with a clear line of sight to a targetTP, we will return the playerTP value with the shortest distance between it and its targetTP.  
     
     
-    targetTestPoints = magiciansStaff(targetPos)
-    playerTestPoints = magiciansStaff(playerPos)
+    targetTestPoints = magiciansStaff(targetPos, 22) # The number here should REALLY be a 2* a prime.  Its just better that way. 
+    playerTestPoints = magiciansStaff(playerPos, 22)
     
     bestTP = magicMissile(playerTestPoints,targetTestPoints,playerPos,targetPos)
 
@@ -236,7 +237,7 @@ def chase(playerList, xWalls, yWalls, playerRadii):
 
     
     pfXYDist = (pathfinderPos[0]-playerPos[0],pathfinderPos[1]-playerPos[1]) # The X and Y displacement between the player and the pathfinder target.  
-    pfDist = math.hypot(pfXYDist[0],pfXYDist[1]) # The direct distance between the player and the pathfinder target.  
+    pfDist = math.hypot(pfXYDist[0],pfXYDist[1]) + 0.1 # The direct distance between the player and the pathfinder target.  
     playerDir = ((pfXYDist[0]/pfDist),(pfXYDist[1]/pfDist)) # The X and Y displacement between the player and the pathfinder target normalised so that the direct distance is one.  We can now feed this value directly into the player so make them move towards the target.  
  
     return playerDir
@@ -308,7 +309,7 @@ async def interlinked():
             #else:
             #    playerDir = flee(playerList, walls, playerRadii)
                 
-            step = int(playerRadii * 1/2) 
+            step = int(playerRadii * 1/6) # This is quite a lot slower than the human players.  Currently this is just for testing but it could be make quicker later.  
             xOffset = playerDir[0] * step
             yOffset = playerDir[1] * step
             playerPos[0] += xOffset
