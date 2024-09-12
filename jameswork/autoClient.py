@@ -81,47 +81,96 @@ def pathFinder(playerPos, targetPos, xWalls, yWalls):
     def magiciansStaff(testPoint, TPCount):
         newTestPoints = []
         for i in range(int(TPCount/2)):
-            intersects = []
-            intersectsSetTwo = []
-            m = math.tan(math.radians(i*(math.ceil(360/TPCount)))) + 0.1 # These numbers might seem arbitrary and weird, 17 steps of 11 degrees?  Well, if you do this, you can cover the full 360 without hitting values that produce infinite gradients (remember, for every angle step here we are actually returning two legitimate test points.  The magicians staff has two ends :) ).  
-            c = -(m*testPoint[0] - testPoint[1])
-            for wall in xWalls:
-                possibleIntersectY = m*wall[0] + c # The formula of a line given the gradient, c, and X
-                if possibleIntersectY >= wall[1] and possibleIntersectY <= wall[2]:
-                    realIntersect = (wall[0],possibleIntersectY)
-                    intersects.append(realIntersect)
-            for wall in yWalls:
-                possibleIntersectX = (wall[0] - c)/m # The formula of a line given the gradient, c, and Y.  I think.  I did it in my head, it could be wrong IDFK
-                if possibleIntersectX >= wall[1] and possibleIntersectX <= wall[2]:
-                    realIntersect = (possibleIntersectX, wall[0])
-                    intersects.append(realIntersect)
-
-            nearestIDist = 500000
-            secondNearestIDist = 500000
-            for point in intersects:
-                dist = math.hypot((testPoint[0]-point[0]),(testPoint[1]-point[1]))
-                if dist < nearestIDist:
-                    nearestIDist = dist
-                    nearestI = point # The nearest intersect to the test point will always be the first wall that the hypothetical magicians staff hits.  The difficulty comes after this - we want the positions of the first two walls that the staff hits, however the second nearest intersect might well just be the other side of the first wall, which we are not interested in.  
-            for point in intersects: # So here what we're doing is checking if nearestI lies between the testPoint and any of the other intersects.  If it DOESN'T, then we know that this newly found intersect cannot possibly be on the "other side" from the testPoints point of view, which is good because we are not interested in any of those points.  THis leaves us with a new set of intersects which definitely contains the second of the first two walls that the magicians staff hits, this being the one that is nearest to the testPoint.  
-                betweenX = min(testPoint[0], point[0]) <= nearestI[0] <= max(testPoint[0], point[0])
-                betweenY = min(testPoint[1], point[1]) <= nearestI[1] <= max(testPoint[1], point[1])
-            
-                if betweenX == False and betweenY == False:
-                    intersectsSetTwo.append(point)
-        
-            for point in intersectsSetTwo:
-                dist = math.hypot((testPoint[0]-point[0]),(testPoint[1]-point[1]))
-                if dist < secondNearestIDist:
-                    secondNearestIDist = dist
-                    secondNearestI = point
+            TPset_a = []
+            TPset_b = []
+            lineAngle = math.radians(i*(math.ceil(360/TPCount)))         
+            #print("-------")
+            #print(i)
+            #print(math.degrees(lineAngle))  
+            xStep = -playerRadii * math.sin(lineAngle) 
+            yStep = playerRadii * math.cos(lineAngle)
+            #print("===")
+            #print(xStep)
+            #print(yStep)
+            for j in range(3): 
+                intersects = []
+                intersectsSetTwo = []
                 
-            newTestPoints.append(nearestI)
-            newTestPoints.append(secondNearestI)
+                if j == 0:
+                    offsetTestPoint = testPoint
+                elif j == 1:
+                    offsetTestPoint = (testPoint[0] + xStep, testPoint[1] + yStep)
+                elif j == 2:
+                    offsetTestPoint = (testPoint[0] - xStep, testPoint[1] - yStep)
+                    
+                ax.scatter(offsetTestPoint[0], offsetTestPoint[1], color = 'black', s = 1)
+                    
+                m = math.tan(lineAngle) + 0.1 # These numbers might seem arbitrary and weird, 17 steps of 11 degrees?  Well, if you do this, you can cover the full 360 without hitting values that produce infinite gradients (remember, for every angle step here we are actually returning two legitimate test points.  The magicians staff has two ends :) ).  
+                c = -(m*offsetTestPoint[0] - offsetTestPoint[1])
+                for wall in xWalls:
+                    possibleIntersectY = m*wall[0] + c # The formula of a line given the gradient, c, and X
+                    if possibleIntersectY >= wall[1] and possibleIntersectY <= wall[2]:
+                        realIntersect = (wall[0],possibleIntersectY)
+                        intersects.append(realIntersect)
+                for wall in yWalls:
+                    possibleIntersectX = (wall[0] - c)/m # The formula of a line given the gradient, c, and Y.  I think.  I did it in my head, it could be wrong IDFK
+                    if possibleIntersectX >= wall[1] and possibleIntersectX <= wall[2]:
+                        realIntersect = (possibleIntersectX, wall[0])
+                        intersects.append(realIntersect)
+
+                nearestIDist = 500000
+                secondNearestIDist = 500000
+                for point in intersects:
+                    dist = math.hypot((testPoint[0]-point[0]),(testPoint[1]-point[1]))
+                    if dist < nearestIDist:
+                        nearestIDist = dist
+                        nearestI = point # The nearest intersect to the test point will always be the first wall that the hypothetical magicians staff hits.  The difficulty comes after this - we want the positions of the first two walls that the staff hits, however the second nearest intersect might well just be the other side of the first wall, which we are not interested in.  
+                for point in intersects: # So here what we're doing is checking if nearestI lies between the testPoint and any of the other intersects.  If it DOESN'T, then we know that this newly found intersect cannot possibly be on the "other side" from the testPoints point of view, which is good because we are not interested in any of those points.  THis leaves us with a new set of intersects which definitely contains the second of the first two walls that the magicians staff hits, this being the one that is nearest to the testPoint.  
+                    betweenX = min(offsetTestPoint[0], point[0]) <= nearestI[0] <= max(offsetTestPoint[0], point[0])
+                    betweenY = min(offsetTestPoint[1], point[1]) <= nearestI[1] <= max(offsetTestPoint[1], point[1])
+                
+                    if betweenX == False and betweenY == False:
+                        intersectsSetTwo.append(point)
+            
+                for point in intersectsSetTwo:
+                    dist = math.hypot((offsetTestPoint[0]-point[0]),(offsetTestPoint[1]-point[1]))
+                    if dist < secondNearestIDist:
+                        secondNearestIDist = dist
+                        secondNearestI = point
+                        
+                TPset_a.append(nearestI) # These lists will fill in this order: Tp with no offset, TP with positive offset, TP with negative offset.  
+                TPset_b.append(secondNearestI)
+                
+                #newTestPoints.append(nearestI)
+                #newTestPoints.append(secondNearestI)
+                
+            def furthestViableTP(TPset):
+                TPsetDists = []
+                for point in TPset:
+                    TPDist = math.hypot((testPoint[0]-point[0]),(testPoint[1]-point[1]))
+                    TPsetDists.append(TPDist)
+                nearestTPIndex = TPsetDists.index(min(TPsetDists))
+                nearestTP = TPset[nearestTPIndex]
+                
+                if nearestTPIndex == 0:
+                    furthestVTP = nearestTP
+                elif nearestTPIndex == 1:
+                    furthestVTP = (nearestTP[0] - xStep - math.sqrt(2)*xStep, nearestTP[1] - yStep + math.sqrt(2)*yStep)   
+                elif nearestTPIndex == 2:
+                    furthestVTP = (nearestTP[0] + xStep + math.sqrt(2)*xStep, nearestTP[1] + yStep - math.sqrt(2)*yStep)
+                    
+                return furthestVTP 
+            
+            furthestVTP_a = furthestViableTP(TPset_a)
+            furthestVTP_b = furthestViableTP(TPset_b)
+                 
+            newTestPoints.append(furthestVTP_a)
+            newTestPoints.append(furthestVTP_b)
         return newTestPoints
         #Otuers Nose: the vast majority of this point-finding logic worked first time, without any visual testing, perfectly.  I am very smug about that.  
         
-        
+    ax.cla()
+           
     def magicMissile(playerTPList,targetTPList,playerPos,targetPos):
         
         def xWallChecker(playerTP,targetTP):
@@ -186,13 +235,10 @@ def pathFinder(playerPos, targetPos, xWalls, yWalls):
         else:
             return bestTP # If we are able to identify one or more playerTPs with a clear line of sight to a targetTP, we will return the playerTP value with the shortest distance between it and its targetTP.  
     
-    
-    targetTestPoints = magiciansStaff(targetPos, 22) # The number here should REALLY be a 2* a prime.  Its just better that way. 
-    playerTestPoints = magiciansStaff(playerPos, 22)
+    targetTestPoints = magiciansStaff(targetPos, 2 * aPrime) # The number here should REALLY be a 2* a prime.  Its just better that way. 
+    playerTestPoints = magiciansStaff(playerPos, 2 * aPrime)
     
     bestTP = magicMissile(playerTestPoints,targetTestPoints,playerPos,targetPos)
-
-    ax.cla()
     
     for point in targetTestPoints:
         ax.scatter(point[0], point[1], color = 'r')
@@ -206,7 +252,8 @@ def pathFinder(playerPos, targetPos, xWalls, yWalls):
         
     ax.set_xlim(0,1800)
     ax.set_ylim(1000,0)
-        
+    
+    ax.set_aspect('equal', adjustable='box')
     plt.draw() # This plot gives us i think the third unique method of visualising the playable area that ive created in this project so far - a scatter plot that shows the location of a given player, and a point-cloud of the walls that they can "see".  
     
     plt.pause(1/79)
@@ -254,6 +301,10 @@ async def interlinked():
         global virus
         global infDist
         global infStrength
+        global playerRadii
+        global aPrime
+        
+        aPrime = 11
         running = True
         
         await websocket.send(json.dumps(playerInfo))
@@ -264,6 +315,7 @@ async def interlinked():
         yWalls = []
                 
         playerRadii = int(wallDefs[1] / 35)
+
         walls = [(wallDefs[2]), # Left border
                 (wallDefs[3]), # Top border
                 (wallDefs[4]), # Right border
@@ -323,3 +375,37 @@ plt.ion()
 fig, ax = plt.subplots()
  
 asyncio.run(interlinked())
+
+# I have just reset this entire project back to a previous commit, because in my effort to give the player some awareness of its own width while pathfinding i utterly ruined the entire thing.  
+# Here are the cliffnotes of the changes that i've gone back on:-
+# - Made is so that all test points are offset back a tiny amount towards their point of origin, or "parent".  This meant that no test point sat directly up against a wall.  
+# - Made is so that, when no playerTPs have a line-of-sight on any targetTPs, each playerTP would create childTPs around themselves and check if any of them have a line-of-sight.  
+#   This was done in order of most distance playerTP to least distant, and would stop as soon as a single good path was found.  Once a path was found, the player would be instructed to 
+#   move in the direction of the playerTP that the successful childTP belonged to.  
+#
+# The first bulletpoint was vital in getting the second to work as it turns out - when the script calls the magiciansStaff def and is returned a list of places where the line intersects walls, 
+# it needs to filter through this list of points to find the two that the player has a line-of-sight on.  It does this by first identifying the point nearest to the player, which it will always have a line-of-sight on, 
+# and then by filtering the list for all of the points on the other side of the player relative to that first point.  It then finds the point in this new set that is nearest to the player, which will also be the second
+# of the two points that we want.  This works so long as the player, or the parentTP, is not sitting directly on a wall.  If it is sitting directly on a wall, then the nearest point in the list of intersections will always be exactly its 
+# own position, which makes identifying the points on the "other side" of that impossible.  
+# The solution is thus to just never have parentTPs sitting directly on walls.  By offsetting all of the playerTPs in from their wall  by a small amount, we don't run into that issue when they need to create childTPs.  
+# 
+# The following changes are where it all sort of started to fall apart:- 
+# - Made it so that, for every time magiciansStaff was called and two playerTPs, targetTPs or childTPs were idenfied, magiciansStaff was called twice more and two extra sets of TPs were found.  The lines in these 
+#   two extra calls would be offset perpedicular to the gradient from the first line by playerRadii and -playerRadii respectively, which means that they describe the path that the outer edges of the player would follow 
+#   rather than the path that the centre would follow towards the target.  This in effect lets us check if moving towards the target would result in the player bumping into a wall or being blocked - if one of the outer TPs stops 
+#   short of the target, then the path is no good.  
+#
+# There is nothing wrong with this in theory but for some reason it just wasn't working, and it had become to complicated to simply scoop out the crap code.  
+# Here is one of the fundimental issues with the implimentation.  Like i said before, if one of the outer TPs stops short of the main TP, then the path is no good.  So you can check for this by measuring the distance between 
+# the parentTP and the main TP, and the two outer TPs, and comparing those three measurements to see if one of the outer TPs was considerably closer to the parentTP than the main TP.  If it was, then it stopped short and the paths 
+# no good.  However, we would never expect any of these distances to be the same length.  Imagine you have two laser points stuck to a piece of wood, both parallel, set one metre apart, with a pingpong ball exactly halfway between them.  
+# You take this setup and shine both lasers perfectly perpendicularly at a wall, and then measure the distance between the pingpong ball and both laser dots.  In this setup you'd find both measurements to be the same.  
+# However, if you angled the lasers at 45 degrees. you'd find one measurement to be shorter than the other.  If you angles them very accutely, you'd find one to be massively shorter than the other.  So clearly comparing the 
+# length of these measurements to see if one is shorter than the other is no way to determining if one of the lasers hit a different wall.  
+# 
+# 
+# So, what is the solution?  Perhaps an option would be to cast out these three lines, see which one hits something first, and use that to determine a new targetTP.  If one of the outer TPs stops short, then 
+# simply displace it sideways so that it lies on the main TPs line, and call that the target.  If the main TP stops short of the outer TPs, then thats fine just use that as the target.  
+# 
+# Hmm, yes i think that might work.  Jesus this is like pulling teeth though.  
