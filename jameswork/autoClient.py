@@ -8,6 +8,7 @@ import numpy as np
 import nltk
 from nltk.corpus import words
 import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
 
 nltk.download('words')
 
@@ -17,7 +18,7 @@ infDist = random.randint(1,200) # This is a distance in units.  I think the uni
 infStrength = random.randint(0,100) # This is a percentage.  
 infCheckTime = 2
 counter = random.randint(1,115)
-playerPos = [300,900]
+playerPos = [900,500]
 playerDir = [random.randint(-1,1),random.randint(-1,1)]
 wallShareCheck = False
 playerInfo = {}
@@ -78,20 +79,20 @@ def infectionLogicDef(playerList):
 
 def pathFinder(playerPos, targetPos, xWalls, yWalls):
     
+    ax.cla()
+    
     def magiciansStaff(testPoint, TPCount):
         newTestPoints = []
         for i in range(int(TPCount/2)):
             TPset_a = []
             TPset_b = []
-            lineAngle = math.radians(i*(math.ceil(360/TPCount)))         
-            #print("-------")
-            #print(i)
-            #print(math.degrees(lineAngle))  
-            xStep = -playerRadii * math.sin(lineAngle) 
-            yStep = playerRadii * math.cos(lineAngle)
-            #print("===")
-            #print(xStep)
-            #print(yStep)
+            lineAngle = math.radians(i*(math.ceil(360/TPCount)))
+            outerTPOffset = 0.75 # The line that defines the first two mainTPs is just barely off-parallel with the x-axis.  This means that if the player is positions right up against an x-axis wall, the line that defines one of its pairs of outerTPs will intersect with that wall in an undesireable way.  We can sort of avoid this edge-case by just having the outerTPs be offset by slightly less than the players Radius.  
+            truePlayerRadii = outerTPOffset * playerRadii + abs(((playerRadii * math.sqrt(2)) - playerRadii) * math.sin(2*lineAngle)) # Ok, so the problem that this is meant to address is that the player is not actually a circle.  It is a square with width and height = 2 * playerRadii.  This means that if we nly use playerRadii when offsetting lines, lines with a gradient near 45 degrees won't actually be offset enough.  We can fix this by creating a true player radius that varies with the angle of the line that is currently being drawn, so that is is playerRadii when the lines angle is 0 or 90, and playerRadii * sqrt(2) when its 45 or 135.  
+            xStep1 = -truePlayerRadii * math.sin(lineAngle) # The purpose of these X and Y steps is to take a given point on a line, and find a new point that is offset from the initial point, perpendicularly to the line, by playerRadii * outerTPOffset.  
+            yStep1 = truePlayerRadii * math.cos(lineAngle)
+            xStep2 = truePlayerRadii * math.cos(lineAngle) # The purpose of these X and Y steps is to take a given point on a line, and find a new point that is offset from the initial point, parallel to the line, by playerRadii.  
+            yStep2 = truePlayerRadii * math.sin(lineAngle)
             for j in range(3): 
                 intersects = []
                 intersectsSetTwo = []
@@ -99,13 +100,13 @@ def pathFinder(playerPos, targetPos, xWalls, yWalls):
                 if j == 0:
                     offsetTestPoint = testPoint
                 elif j == 1:
-                    offsetTestPoint = (testPoint[0] + xStep, testPoint[1] + yStep)
+                    offsetTestPoint = (testPoint[0] + xStep1, testPoint[1] + yStep1)
                 elif j == 2:
-                    offsetTestPoint = (testPoint[0] - xStep, testPoint[1] - yStep)
+                    offsetTestPoint = (testPoint[0] - xStep1, testPoint[1] - yStep1)
                     
                 ax.scatter(offsetTestPoint[0], offsetTestPoint[1], color = 'black', s = 1)
                     
-                m = math.tan(lineAngle) + 0.1 # These numbers might seem arbitrary and weird, 17 steps of 11 degrees?  Well, if you do this, you can cover the full 360 without hitting values that produce infinite gradients (remember, for every angle step here we are actually returning two legitimate test points.  The magicians staff has two ends :) ).  
+                m = math.tan(lineAngle) + 0.000001 
                 c = -(m*offsetTestPoint[0] - offsetTestPoint[1])
                 for wall in xWalls:
                     possibleIntersectY = m*wall[0] + c # The formula of a line given the gradient, c, and X
@@ -141,25 +142,62 @@ def pathFinder(playerPos, targetPos, xWalls, yWalls):
                 TPset_a.append(nearestI) # These lists will fill in this order: Tp with no offset, TP with positive offset, TP with negative offset.  
                 TPset_b.append(secondNearestI)
                 
+                nearestI_X = (nearestI[0],secondNearestI[0])
+                nearestI_Y = (nearestI[1],secondNearestI[1])
+                
+                plt.plot(nearestI_X,nearestI_Y, c = '#808080', zorder=-10)
+                
                 #newTestPoints.append(nearestI)
                 #newTestPoints.append(secondNearestI)
                 
             def furthestViableTP(TPset):
                 TPsetDists = []
+                tpCounter = 0
+                
+                #print("===-===")
+                #print("--- Out of the following numbers... ---")
                 for point in TPset:
-                    TPDist = math.hypot((testPoint[0]-point[0]),(testPoint[1]-point[1]))
+                    if tpCounter == 0:
+                        offsetTestPoint = testPoint
+                    if tpCounter == 1:
+                        offsetTestPoint = (testPoint[0] + xStep1, testPoint[1] + yStep1)
+                    elif tpCounter == 2:
+                        offsetTestPoint = (testPoint[0] - xStep1, testPoint[1] - yStep1)
+                        
+                    TPDist = math.hypot((offsetTestPoint[0]-point[0]),(offsetTestPoint[1]-point[1]))
+                    #print(TPDist)
                     TPsetDists.append(TPDist)
+                    
+                    if tpCounter != 2:
+                        tpCounter += 1
+                    else:
+                        tpCounter = 0
+                    
                 nearestTPIndex = TPsetDists.index(min(TPsetDists))
                 nearestTP = TPset[nearestTPIndex]
+                #print("--- The smallest is... ---")
+                #print(min(TPsetDists))
                 
                 if nearestTPIndex == 0:
                     furthestVTP = nearestTP
                 elif nearestTPIndex == 1:
-                    furthestVTP = (nearestTP[0] - xStep - math.sqrt(2)*xStep, nearestTP[1] - yStep + math.sqrt(2)*yStep)   
+                    furthestVTP = (nearestTP[0] - xStep1, nearestTP[1] - yStep1)   
                 elif nearestTPIndex == 2:
-                    furthestVTP = (nearestTP[0] + xStep + math.sqrt(2)*xStep, nearestTP[1] + yStep - math.sqrt(2)*yStep)
+                    furthestVTP = (nearestTP[0] + xStep1, nearestTP[1] + yStep1)
                     
-                return furthestVTP 
+                if furthestVTP[0] > testPoint[0]: # if the furthest viable TP is further up the x axis than its parentTP, we want to move it down a bit
+                    xSign = 0
+                else:
+                    xSign = 0
+                
+                if furthestVTP[1] > testPoint[1]: # if the furthest viable TP is further up the y axis than its parentTP, we want to move it down a bit
+                    ySign = 0
+                else:
+                    ySign = 0
+                    
+                furthestVTP_fin = (furthestVTP[0] + (xSign * xStep2),furthestVTP[1] + (ySign * yStep2))
+                    
+                return furthestVTP_fin
             
             furthestVTP_a = furthestViableTP(TPset_a)
             furthestVTP_b = furthestViableTP(TPset_b)
@@ -168,8 +206,6 @@ def pathFinder(playerPos, targetPos, xWalls, yWalls):
             newTestPoints.append(furthestVTP_b)
         return newTestPoints
         #Otuers Nose: the vast majority of this point-finding logic worked first time, without any visual testing, perfectly.  I am very smug about that.  
-        
-    ax.cla()
            
     def magicMissile(playerTPList,targetTPList,playerPos,targetPos):
         
@@ -195,7 +231,7 @@ def pathFinder(playerPos, targetPos, xWalls, yWalls):
             else:
                 m = (targetTP[1] - playerTP[1])/(targetTP[0]-playerTP[0])
                 if m == 0:
-                    m = 0.01 # IF the player and target PTs x values are the same (e.g. they lie on the same horizontal wall), then the gradient will be 0.  This is not a problem for checking the x walls, but it is for the y walls, so i am just manually correcting it to a tiny value. It introduces a small error but clears up a massive headache.  
+                    m = 0.00001 # IF the player and target PTs x values are the same (e.g. they lie on the same horizontal wall), then the gradient will be 0.  This is not a problem for checking the x walls, but it is for the y walls, so i am just manually correcting it to a tiny value. It introduces a small error but clears up a massive headache.  
             c = -(m*targetTP[0] - targetTP[1])
             for wall in yWalls:
                 betweenY = min(playerTP[1], targetTP[1]) <= wall[0] <= max(playerTP[1], targetTP[1])
@@ -209,12 +245,6 @@ def pathFinder(playerPos, targetPos, xWalls, yWalls):
         furthestPlayerTPDist = -1
         bestTPDist = 50000 # Im getting myself brain-tied here.  The bestTP is being to be the playerTP that is the closest to a targetTP that it has a clear line of sight to.  So bestTPDist will be the distance between the playerTP and the targetTP, and we want this to be as small as possible.  
             
-        clearPathX = xWallChecker(playerPos,targetPos)
-        clearPathY = yWallChecker(playerPos,targetPos)
-        
-        if clearPathX == True and clearPathY == True:
-            return targetPos # If the player has a clear line of sight to the target, then we really don't want to piss around with checking and moving towards any test points - we can just move right to the target.  
-        
         for playerTP in playerTPList:
             dist1 = math.hypot((playerTP[0]-playerPos[0]),(playerTP[1]-playerPos[1])) # This is the distance between the player and the current playerTP.  We want to keep track of which playerTP has the largest value here.  
             if dist1 > furthestPlayerTPDist:
@@ -233,10 +263,11 @@ def pathFinder(playerPos, targetPos, xWalls, yWalls):
         if bestTPDist == 50000:       
             return furthestPlayerTP # If we aren't able to identify a playerTP with a clear line of sight to either the target or a targetTP, then we will return this value by default.  This should at the very least coax the player into a more favorable map position (logically i think it should push them towards the centre but im more than expecting there to be some edge-case where it gets wedged in a corner or something).  
         else:
-            return bestTP # If we are able to identify one or more playerTPs with a clear line of sight to a targetTP, we will return the playerTP value with the shortest distance between it and its targetTP.  
+            return bestTP # If we are able to identify one or more playerTPs with a clear line of sight to a targetTP, we will return the playerTP value with the shortest distance between it and its targetTP.      
+
     
-    targetTestPoints = magiciansStaff(targetPos, 2 * aPrime) # The number here should REALLY be a 2* a prime.  Its just better that way. 
-    playerTestPoints = magiciansStaff(playerPos, 2 * aPrime)
+    targetTestPoints = magiciansStaff(targetPos, 2 * MagStaffCalls)
+    playerTestPoints = magiciansStaff(playerPos, 2 * MagStaffCalls)
     
     bestTP = magicMissile(playerTestPoints,targetTestPoints,playerPos,targetPos)
     
@@ -249,6 +280,8 @@ def pathFinder(playerPos, targetPos, xWalls, yWalls):
         ax.scatter(playerPos[0], playerPos[1], color = 'g', marker = '*')
         
     ax.scatter(bestTP[0], bestTP[1], color = 'gold', s = 100)
+    print("---------")
+    print(bestTP)
         
     ax.set_xlim(0,1800)
     ax.set_ylim(1000,0)
@@ -282,12 +315,12 @@ def chase(playerList, xWalls, yWalls, playerRadii):
 
     pathfinderPos = pathFinder(playerPos, targetPos, xWalls, yWalls) # These are the co-ordinates of either the target, a point that has a direct line of sight to both the player and the target, or a point tht has direct line of sight to the player and to another point that has direct line of sight to the target.  Or, in the worst case, a point that is just sufficently far away from the player (repeated moves in this direction should trend the player towards the centre of the map but hell what do i know)
 
-    
     pfXYDist = (pathfinderPos[0]-playerPos[0],pathfinderPos[1]-playerPos[1]) # The X and Y displacement between the player and the pathfinder target.  
     pfDist = math.hypot(pfXYDist[0],pfXYDist[1]) + 0.1 # The direct distance between the player and the pathfinder target.  
     playerDir = ((pfXYDist[0]/pfDist),(pfXYDist[1]/pfDist)) # The X and Y displacement between the player and the pathfinder target normalised so that the direct distance is one.  We can now feed this value directly into the player so make them move towards the target.  
  
-    return playerDir
+    #return playerDir
+    return (0,0) # Use this when you want to clip your players wings and have it not move.  
 
 # ---------------
 
@@ -302,9 +335,9 @@ async def interlinked():
         global infDist
         global infStrength
         global playerRadii
-        global aPrime
+        global MagStaffCalls
         
-        aPrime = 11
+        MagStaffCalls = 3 # This is basically half the number of test points that we want to create around each parentTP.  This can be set to any odd number.  To grossly summarise the process, this script is set up such that each TP found will be seperated by an angle of 360/2*magStaffCalls, so if magStaffCalls = 1 then the TPs will be 180 degrees apart.  If magStaffCalls is even, for example 2, then there will be TPs at 90 and 270 degrees, which mean that they lie on a line with infinite gradient, which is a problem that is best just avoided outright.  11 seems to be a sweet spot.  
         running = True
         
         await websocket.send(json.dumps(playerInfo))
@@ -375,37 +408,3 @@ plt.ion()
 fig, ax = plt.subplots()
  
 asyncio.run(interlinked())
-
-# I have just reset this entire project back to a previous commit, because in my effort to give the player some awareness of its own width while pathfinding i utterly ruined the entire thing.  
-# Here are the cliffnotes of the changes that i've gone back on:-
-# - Made is so that all test points are offset back a tiny amount towards their point of origin, or "parent".  This meant that no test point sat directly up against a wall.  
-# - Made is so that, when no playerTPs have a line-of-sight on any targetTPs, each playerTP would create childTPs around themselves and check if any of them have a line-of-sight.  
-#   This was done in order of most distance playerTP to least distant, and would stop as soon as a single good path was found.  Once a path was found, the player would be instructed to 
-#   move in the direction of the playerTP that the successful childTP belonged to.  
-#
-# The first bulletpoint was vital in getting the second to work as it turns out - when the script calls the magiciansStaff def and is returned a list of places where the line intersects walls, 
-# it needs to filter through this list of points to find the two that the player has a line-of-sight on.  It does this by first identifying the point nearest to the player, which it will always have a line-of-sight on, 
-# and then by filtering the list for all of the points on the other side of the player relative to that first point.  It then finds the point in this new set that is nearest to the player, which will also be the second
-# of the two points that we want.  This works so long as the player, or the parentTP, is not sitting directly on a wall.  If it is sitting directly on a wall, then the nearest point in the list of intersections will always be exactly its 
-# own position, which makes identifying the points on the "other side" of that impossible.  
-# The solution is thus to just never have parentTPs sitting directly on walls.  By offsetting all of the playerTPs in from their wall  by a small amount, we don't run into that issue when they need to create childTPs.  
-# 
-# The following changes are where it all sort of started to fall apart:- 
-# - Made it so that, for every time magiciansStaff was called and two playerTPs, targetTPs or childTPs were idenfied, magiciansStaff was called twice more and two extra sets of TPs were found.  The lines in these 
-#   two extra calls would be offset perpedicular to the gradient from the first line by playerRadii and -playerRadii respectively, which means that they describe the path that the outer edges of the player would follow 
-#   rather than the path that the centre would follow towards the target.  This in effect lets us check if moving towards the target would result in the player bumping into a wall or being blocked - if one of the outer TPs stops 
-#   short of the target, then the path is no good.  
-#
-# There is nothing wrong with this in theory but for some reason it just wasn't working, and it had become to complicated to simply scoop out the crap code.  
-# Here is one of the fundimental issues with the implimentation.  Like i said before, if one of the outer TPs stops short of the main TP, then the path is no good.  So you can check for this by measuring the distance between 
-# the parentTP and the main TP, and the two outer TPs, and comparing those three measurements to see if one of the outer TPs was considerably closer to the parentTP than the main TP.  If it was, then it stopped short and the paths 
-# no good.  However, we would never expect any of these distances to be the same length.  Imagine you have two laser points stuck to a piece of wood, both parallel, set one metre apart, with a pingpong ball exactly halfway between them.  
-# You take this setup and shine both lasers perfectly perpendicularly at a wall, and then measure the distance between the pingpong ball and both laser dots.  In this setup you'd find both measurements to be the same.  
-# However, if you angled the lasers at 45 degrees. you'd find one measurement to be shorter than the other.  If you angles them very accutely, you'd find one to be massively shorter than the other.  So clearly comparing the 
-# length of these measurements to see if one is shorter than the other is no way to determining if one of the lasers hit a different wall.  
-# 
-# 
-# So, what is the solution?  Perhaps an option would be to cast out these three lines, see which one hits something first, and use that to determine a new targetTP.  If one of the outer TPs stops short, then 
-# simply displace it sideways so that it lies on the main TPs line, and call that the target.  If the main TP stops short of the outer TPs, then thats fine just use that as the target.  
-# 
-# Hmm, yes i think that might work.  Jesus this is like pulling teeth though.  
