@@ -81,33 +81,56 @@ def pathFinder(playerPos, targetPos, xWalls, yWalls):
     
     ax.cla()
     
-    def magiciansStaff(testPoint, TPCount):
-        newTestPoints = []
+    def magiciansStaff(parentTP, TPCount):
+        
+        viableChildTPList = [] # This is the list that we ultimately want to populate and return.  
+        
+        numerator = targetPos[1]-playerPos[1]
+        denominator = targetPos[0]-playerPos[0]      
+        if denominator == 0:
+            denominator = 0.000001
+            
+        angle2target = math.degrees(math.tanh(numerator/denominator))
+        
+        if denominator < 0:
+            angle2target += 180
+        elif numerator < 0:
+            angle2target += 360
+        
         for i in range(int(TPCount/2)):
-            TPset_a = []
-            TPset_b = []
-            lineAngle = math.radians(i*(math.ceil(360/TPCount)))
-            outerTPOffset = 0.75 # The line that defines the first two mainTPs is just barely off-parallel with the x-axis.  This means that if the player is positions right up against an x-axis wall, the line that defines one of its pairs of outerTPs will intersect with that wall in an undesireable way.  We can sort of avoid this edge-case by just having the outerTPs be offset by slightly less than the players Radius.  
-            truePlayerRadii = outerTPOffset * playerRadii + abs(((playerRadii * math.sqrt(2)) - playerRadii) * math.sin(2*lineAngle)) # Ok, so the problem that this is meant to address is that the player is not actually a circle.  It is a square with width and height = 2 * playerRadii.  This means that if we nly use playerRadii when offsetting lines, lines with a gradient near 45 degrees won't actually be offset enough.  We can fix this by creating a true player radius that varies with the angle of the line that is currently being drawn, so that is is playerRadii when the lines angle is 0 or 90, and playerRadii * sqrt(2) when its 45 or 135.  
-            xStep1 = -truePlayerRadii * math.sin(lineAngle) # The purpose of these X and Y steps is to take a given point on a line, and find a new point that is offset from the initial point, perpendicularly to the line, by playerRadii * outerTPOffset.  
-            yStep1 = truePlayerRadii * math.cos(lineAngle)
-            xStep2 = truePlayerRadii * math.cos(lineAngle) # The purpose of these X and Y steps is to take a given point on a line, and find a new point that is offset from the initial point, parallel to the line, by playerRadii.  
-            yStep2 = truePlayerRadii * math.sin(lineAngle)
+            childTPset_a = [] # We want these to only ever be points that lie above their parents on the X axis.  
+            childTPset_b = [] # We want these to only ever be points that lie below their parents on the X axis.  
+            parentTPset = []
+            
+            lineAngleDegrees = i*(math.ceil(360/TPCount)) + angle2target
+            if lineAngleDegrees >= 360:
+                lineAngleDegrees -= 360
+            if lineAngleDegrees >= 180:
+                lineAngleDegrees -= 180
+                
+            lineAngle = math.radians(lineAngleDegrees)
+            
+            outerTPOffset = 0.75 # I've put a footnote at the bottom on this script to explain why we do this, and why we need truePlayerRadii
+            truePlayerRadii = outerTPOffset * playerRadii + abs(((playerRadii * math.sqrt(2)) - playerRadii) * math.sin(2*lineAngle)) 
+            xStep = truePlayerRadii * math.sin(lineAngle) # The purpose of these X and Y steps is to take a given point on a line, and find a new point that is offset from the initial point, perpendicularly to the line, by playerRadii * outerTPOffset. 
+            yStep = truePlayerRadii * math.cos(lineAngle) # Although in truth these values do double-duty.  We can move a point parallel to its line by adding yStep to its x-component and xStep to its y-component (altering the sign of each component accordingly).  They should really be renamed "sinStep" and "cosStep".  Maybe later.  Maybe never! Ho ho!  
             for j in range(3): 
                 intersects = []
                 intersectsSetTwo = []
                 
                 if j == 0:
-                    offsetTestPoint = testPoint
+                    offset_parentTP = parentTP # In this case, the offset_parentTP is not actually offset from the parentTP, but for the sake of an easy life lets just say it has an offset of 0.  
                 elif j == 1:
-                    offsetTestPoint = (testPoint[0] + xStep1, testPoint[1] + yStep1)
+                    offset_parentTP = (parentTP[0] - xStep, parentTP[1] + yStep)
                 elif j == 2:
-                    offsetTestPoint = (testPoint[0] - xStep1, testPoint[1] - yStep1)
+                    offset_parentTP = (parentTP[0] + xStep, parentTP[1] - yStep)
                     
-                ax.scatter(offsetTestPoint[0], offsetTestPoint[1], color = 'black', s = 1)
+                parentTPset.append(offset_parentTP)
                     
-                m = math.tan(lineAngle) + 0.000001 
-                c = -(m*offsetTestPoint[0] - offsetTestPoint[1])
+                ax.scatter(offset_parentTP[0], offset_parentTP[1], color = 'black', s = 1)
+                    
+                m = math.tan(lineAngle) + 0.00001 
+                c = -(m*offset_parentTP[0] - offset_parentTP[1])
                 for wall in xWalls:
                     possibleIntersectY = m*wall[0] + c # The formula of a line given the gradient, c, and X
                     if possibleIntersectY >= wall[1] and possibleIntersectY <= wall[2]:
@@ -119,93 +142,85 @@ def pathFinder(playerPos, targetPos, xWalls, yWalls):
                         realIntersect = (possibleIntersectX, wall[0])
                         intersects.append(realIntersect)
 
-                nearestIDist = 500000
-                secondNearestIDist = 500000
-                for point in intersects:
-                    dist = math.hypot((testPoint[0]-point[0]),(testPoint[1]-point[1]))
-                    if dist < nearestIDist:
-                        nearestIDist = dist
-                        nearestI = point # The nearest intersect to the test point will always be the first wall that the hypothetical magicians staff hits.  The difficulty comes after this - we want the positions of the first two walls that the staff hits, however the second nearest intersect might well just be the other side of the first wall, which we are not interested in.  
-                for point in intersects: # So here what we're doing is checking if nearestI lies between the testPoint and any of the other intersects.  If it DOESN'T, then we know that this newly found intersect cannot possibly be on the "other side" from the testPoints point of view, which is good because we are not interested in any of those points.  THis leaves us with a new set of intersects which definitely contains the second of the first two walls that the magicians staff hits, this being the one that is nearest to the testPoint.  
-                    betweenX = min(offsetTestPoint[0], point[0]) <= nearestI[0] <= max(offsetTestPoint[0], point[0])
-                    betweenY = min(offsetTestPoint[1], point[1]) <= nearestI[1] <= max(offsetTestPoint[1], point[1])
+                nearestChildTPDist = 500000
+                secondNearestChildTPDist = 500000
+                for I in intersects: # I stands for Intersects.  Not all intersects are valid childTPs, though, which is what we're checking for here.  
+                    dist = math.hypot((offset_parentTP[0]-I[0]),(offset_parentTP[1]-I[1]))
+                    if dist < nearestChildTPDist:
+                        nearestChildTPDist = dist
+                        nearestChildTP = I # The nearest intersect to the test point will always be the first wall that the hypothetical magicians staff hits.  The difficulty comes after this - we want the positions of the first two walls that the staff hits, however the second nearest intersect might well just be the other side of the first wall, which we are not interested in.  
+                for I in intersects: # So here what we're doing is checking if nearestI lies between the testPoint and any of the other intersects.  If it DOESN'T, then we know that this newly found intersect cannot possibly be on the "other side" from the testPoints point of view, which is good because we are not interested in any of those points.  THis leaves us with a new set of intersects which definitely contains the second of the first two walls that the magicians staff hits, this being the one that is nearest to the testPoint.  
+                    betweenX = min(offset_parentTP[0], I[0]) <= nearestChildTP[0] <= max(offset_parentTP[0], I[0])
+                    betweenY = min(offset_parentTP[1], I[1]) <= nearestChildTP[1] <= max(offset_parentTP[1], I[1])
                 
                     if betweenX == False and betweenY == False:
-                        intersectsSetTwo.append(point)
+                        intersectsSetTwo.append(I)
             
-                for point in intersectsSetTwo:
-                    dist = math.hypot((offsetTestPoint[0]-point[0]),(offsetTestPoint[1]-point[1]))
-                    if dist < secondNearestIDist:
-                        secondNearestIDist = dist
-                        secondNearestI = point
+                for I in intersectsSetTwo:
+                    dist = math.hypot((offset_parentTP[0]-I[0]),(offset_parentTP[1]-I[1]))
+                    if dist < secondNearestChildTPDist:
+                        secondNearestChildTPDist = dist
+                        secondNearestChildTP = I
                         
-                TPset_a.append(nearestI) # These lists will fill in this order: Tp with no offset, TP with positive offset, TP with negative offset.  
-                TPset_b.append(secondNearestI)
-                
-                nearestI_X = (nearestI[0],secondNearestI[0])
-                nearestI_Y = (nearestI[1],secondNearestI[1])
-                
-                plt.plot(nearestI_X,nearestI_Y, c = '#808080', zorder=-10)
-                
-                #newTestPoints.append(nearestI)
-                #newTestPoints.append(secondNearestI)
-                
-            def furthestViableTP(TPset):
-                TPsetDists = []
-                tpCounter = 0
-                
-                #print("===-===")
-                #print("--- Out of the following numbers... ---")
-                for point in TPset:
-                    if tpCounter == 0:
-                        offsetTestPoint = testPoint
-                    if tpCounter == 1:
-                        offsetTestPoint = (testPoint[0] + xStep1, testPoint[1] + yStep1)
-                    elif tpCounter == 2:
-                        offsetTestPoint = (testPoint[0] - xStep1, testPoint[1] - yStep1)
-                        
-                    TPDist = math.hypot((offsetTestPoint[0]-point[0]),(offsetTestPoint[1]-point[1]))
-                    #print(TPDist)
-                    TPsetDists.append(TPDist)
-                    
-                    if tpCounter != 2:
-                        tpCounter += 1
-                    else:
-                        tpCounter = 0
-                    
-                nearestTPIndex = TPsetDists.index(min(TPsetDists))
-                nearestTP = TPset[nearestTPIndex]
-                #print("--- The smallest is... ---")
-                #print(min(TPsetDists))
-                
-                if nearestTPIndex == 0:
-                    furthestVTP = nearestTP
-                elif nearestTPIndex == 1:
-                    furthestVTP = (nearestTP[0] - xStep1, nearestTP[1] - yStep1)   
-                elif nearestTPIndex == 2:
-                    furthestVTP = (nearestTP[0] + xStep1, nearestTP[1] + yStep1)
-                    
-                if furthestVTP[0] > testPoint[0]: # if the furthest viable TP is further up the x axis than its parentTP, we want to move it down a bit
-                    xSign = 0
+                if nearestChildTP[0] > offset_parentTP[0]:
+                    childTPset_a.append(nearestChildTP) # These lists will fill in this order: Tp with no offset (this is the mainline), TP with positive offset (e.g. this line is above the mainline when the gradient is positive), TP with negative offset (e.g. this line is below the mainline when the gradient is positive).  
+                    childTPset_b.append(secondNearestChildTP)
                 else:
-                    xSign = 0
+                    childTPset_a.append(secondNearestChildTP)
+                    childTPset_b.append(nearestChildTP)
                 
-                if furthestVTP[1] > testPoint[1]: # if the furthest viable TP is further up the y axis than its parentTP, we want to move it down a bit
-                    ySign = 0
+                # --- graphing stuff ---
+                
+                if j == 0:
+                    colour = '#c9c9c9'
+                    X = (nearestChildTP[0],secondNearestChildTP[0])
+                    Y = (nearestChildTP[1],secondNearestChildTP[1])
+                    plt.plot(X,Y, c = colour, zorder=-10)
+                
+                # --- graphing stuff OVER ---
+                
+            def furthestViableTP(childTPset, parentTPSet):
+                childTPsetDists = []
+                
+                for i in range(3):
+                    current_childTP = childTPset[i]
+                    current_parentTP = parentTPSet[i]
+                    
+                    TPDist = math.hypot((current_parentTP[0]-current_childTP[0]),(current_parentTP[1]-current_childTP[1]))
+                    childTPsetDists.append(TPDist)
+                    
+                nearestChildTP_Index = childTPsetDists.index(min(childTPsetDists)) # We want to find which of the three test points in TPset is the nearest to the parentTP, because that point represents the furthest distance the player can travel in the direction of the mainlineTP before bumping into a wall.  
+                nearestChildTP = childTPset[nearestChildTP_Index]
+                nearestChildTPsParent = parentTPSet[nearestChildTP_Index]
+                
+                # This next block of script takes the nearestChildTP which we just found, and applies some transformations so that it is inline with the mainline (while remaining the same distance away, so we're just moving it perpendicularly to the mainline), and so that it is 
+                # 1 playerRadii closer to the parentTP. This might sound arbitrary to a future reader (or me 2 weeks from now), but its important - by performing these transformations, we know for definite that the point we are left with is the furthest (or a little shy of the furthest) 
+
+                if nearestChildTP_Index == 0: 
+                    furthestVCTP = nearestChildTP
                 else:
-                    ySign = 0
+                    if (nearestChildTP[1] > nearestChildTPsParent[1]): # Don't ask me what any of this shit means i don't know anymore.  
+                        if nearestChildTP_Index == 1:
+                            furthestVCTP = (nearestChildTP[0] + xStep - yStep,nearestChildTP[1] - yStep - xStep)
+                        elif nearestChildTP_Index == 2:
+                            furthestVCTP = (nearestChildTP[0] - xStep - yStep,nearestChildTP[1] + yStep - xStep)
+                            
+                    if (nearestChildTP[1] <= nearestChildTPsParent[1]):
+                        if nearestChildTP_Index == 1:
+                            furthestVCTP = (nearestChildTP[0] + xStep + yStep,nearestChildTP[1] - yStep + xStep)
+                        elif nearestChildTP_Index == 2:
+                            furthestVCTP = (nearestChildTP[0] - xStep + yStep,nearestChildTP[1] + yStep + xStep)
                     
-                furthestVTP_fin = (furthestVTP[0] + (xSign * xStep2),furthestVTP[1] + (ySign * yStep2))
-                    
-                return furthestVTP_fin
+                return furthestVCTP
+                #return nearestChildTP
             
-            furthestVTP_a = furthestViableTP(TPset_a)
-            furthestVTP_b = furthestViableTP(TPset_b)
+            furthestVCTP_a = furthestViableTP(childTPset_a, parentTPset)
+            furthestVCTP_b = furthestViableTP(childTPset_b, parentTPset)
                  
-            newTestPoints.append(furthestVTP_a)
-            newTestPoints.append(furthestVTP_b)
-        return newTestPoints
-        #Otuers Nose: the vast majority of this point-finding logic worked first time, without any visual testing, perfectly.  I am very smug about that.  
+            viableChildTPList.append(furthestVCTP_a)
+            viableChildTPList.append(furthestVCTP_b)
+            
+        return viableChildTPList
            
     def magicMissile(playerTPList,targetTPList,playerPos,targetPos):
         
@@ -255,7 +270,7 @@ def pathFinder(playerPos, targetPos, xWalls, yWalls):
                 clearPathY = yWallChecker(playerTP,targetTP)
                                     
                 if clearPathX == True and clearPathY == True:
-                    dist2 = math.hypot((playerTP[0]-targetTP[0]),(playerTP[1]-targetTP[1])) # this is the distance between the current playerTP and the current targetTP.  We want to keep track of the playerTP with the smallest value here.  
+                    dist2 = math.hypot((playerTP[0]-targetTP[0]),(playerTP[1]-targetTP[1])) # this is the distance between the current playerTP and the target.  We want to keep track of the playerTP with the smallest value here.  
                     if dist2 < bestTPDist:
                         bestTPDist = dist2
                         bestTP = playerTP
@@ -267,6 +282,7 @@ def pathFinder(playerPos, targetPos, xWalls, yWalls):
 
     
     targetTestPoints = magiciansStaff(targetPos, 2 * MagStaffCalls)
+    targetTestPoints.append(targetPos)
     playerTestPoints = magiciansStaff(playerPos, 2 * MagStaffCalls)
     
     bestTP = magicMissile(playerTestPoints,targetTestPoints,playerPos,targetPos)
@@ -280,11 +296,9 @@ def pathFinder(playerPos, targetPos, xWalls, yWalls):
         ax.scatter(playerPos[0], playerPos[1], color = 'g', marker = '*')
         
     ax.scatter(bestTP[0], bestTP[1], color = 'gold', s = 100)
-    print("---------")
-    print(bestTP)
         
     ax.set_xlim(0,1800)
-    ax.set_ylim(1000,0)
+    ax.set_ylim(0,1000)
     
     ax.set_aspect('equal', adjustable='box')
     plt.draw() # This plot gives us i think the third unique method of visualising the playable area that ive created in this project so far - a scatter plot that shows the location of a given player, and a point-cloud of the walls that they can "see".  
@@ -319,8 +333,8 @@ def chase(playerList, xWalls, yWalls, playerRadii):
     pfDist = math.hypot(pfXYDist[0],pfXYDist[1]) + 0.1 # The direct distance between the player and the pathfinder target.  
     playerDir = ((pfXYDist[0]/pfDist),(pfXYDist[1]/pfDist)) # The X and Y displacement between the player and the pathfinder target normalised so that the direct distance is one.  We can now feed this value directly into the player so make them move towards the target.  
  
-    #return playerDir
-    return (0,0) # Use this when you want to clip your players wings and have it not move.  
+    return playerDir
+    #return (0,0) # Use this when you want to clip your players wings and have it not move.  
 
 # ---------------
 
@@ -337,7 +351,7 @@ async def interlinked():
         global playerRadii
         global MagStaffCalls
         
-        MagStaffCalls = 3 # This is basically half the number of test points that we want to create around each parentTP.  This can be set to any odd number.  To grossly summarise the process, this script is set up such that each TP found will be seperated by an angle of 360/2*magStaffCalls, so if magStaffCalls = 1 then the TPs will be 180 degrees apart.  If magStaffCalls is even, for example 2, then there will be TPs at 90 and 270 degrees, which mean that they lie on a line with infinite gradient, which is a problem that is best just avoided outright.  11 seems to be a sweet spot.  
+        MagStaffCalls = 11 # This is basically half the number of test points that we want to create around each parentTP.  This can be set to any odd number.  To grossly summarise the process, this script is set up such that each TP found will be seperated by an angle of 360/2*magStaffCalls, so if magStaffCalls = 1 then the TPs will be 180 degrees apart.  If magStaffCalls is even, for example 2, then there will be TPs at 90 and 270 degrees, which mean that they lie on a line with infinite gradient, which is a problem that is best just avoided outright.  11 seems to be a sweet spot.  
         running = True
         
         await websocket.send(json.dumps(playerInfo))
@@ -408,3 +422,36 @@ plt.ion()
 fig, ax = plt.subplots()
  
 asyncio.run(interlinked())
+
+
+
+# Footnote
+# -------------
+# When trying to draw a square on a co-ordiante grid, we have two (maybe three) pieces of information to go off of: the squares side 
+# length, the angle we're looking at it from, and the fact that it is indeed a square.  I, being bad at maths, approached this naively - If we approximate the square by drawing points at a distance sidelength/2 (or playerRadii), 
+# (e.g. drawing a circle) then we know that this will be exactly correct at four points (the points that lie exactly on the X and Y axis), will be massively wrong at 4 more points (the points where X and Y have the 
+# same absolute value), and sort of iffy in between.  So, i thought, we can fix this by having the distance we plot the points at be variable, in order to "pin" them at correct values given the angle that we're looking at the square from.  
+# Wed want this extra term vary with the angle so that it doesn't add anything when the circle approximate is correct (e.g. at angles 0, 90, 180 and 270), ands a lot when its very incorrect (45, 135, 225, and 315), and 
+# then add whatever is appropriate in between these values.  So i did that - i added a sin term to the distance (thus giving us the variable truePlayerRadii), and found that while it was now exactly correct at 8 points, 
+# it still had considerable error everywhere else.   "No matter", i thought to myself, "i'll just add another sin term that pins the values where its still wrong".  But then the obvious struck me and i realised that i was essentially 
+# chasing a fourier series, something that would only actually be accurate if it had INFINITE terms.  I could add as many terms as i wanted, and while it would narrow in on something functional without 3 or 4, it would never be perfect, 
+# and the effort to chase that point would be disproportionate.  
+# 
+# So how to fix this without going that a fourier transform rabbit hole?  Well, the shape that truePlayerRadii gives us when we plot is is sort of like a lumpy square - its up, down, left, right and diagonal points are correct, but every
+# other point is too far away.  It is unexpectable for any point to lie significantly further out from the centre of the player than its true size, because that can result in the pathfinding logic peaking through walls further down the line.  
+# So instead, we add a scaling factor to draw each point slightly closer in than it otherwise would be.  This makes it so that the furthest out point of the "lumps" are roughly the right distance away from the centre of the shape, and the points 
+# that were previously exactly correct are a little bit closer in.  This isn't ideal, but it significantly better than approximating the player as a circle, or overestimating its physical size.  
+
+# Ok i've finally realised a misassumption i've been making.  I have been splitting the childTPs that i find into two sets - set a with the nearest childTPs, and set b with the second nearest childTPs - and have been operating under the 
+# mistaken thought that each set are all on the same side.  I've been imagining that these points are found by first looking up the line in the position y direction, and then in the negative y direction, and thus all of set a is in the positive y
+# and all of set b is in the negative.  This is obviously, obviously wrong.  The sets are filled, OBVIOUSLY, nearest in a and second nearest in b.  Whether or not the nearest in in the positive or negative y is immaterial.  Since i've been labouring
+# under this bizarre misinterpretation of my own work, i've essentially been shooting myself in the foot over and over.  God almighty.  When you make an assumption, you make an ass out of An and Umption.  
+
+# I have discovered another releated misassumption that i was making.  I am still a little sick so despite having finally realised this mistake, i can't articulate it very well.  
+# So, the program picks an angle.  It then draws a line that follows this angle and which passes through the parentTP across the map.  It finds the first wall that the point intersects and places it in set A, and then finds the second point and places 
+# it in set B.  It then offsets the parentTP in the positive direction, and repeats the process.  It then finally offsets the parentTP in the negative direction and repeats a final time.  This gives us set A, which is filled with nearest wall intersects 
+# to each of the three parent point, and set B, which is filled with the second nearest points.  
+# I have already established that when this is repeated for different angles, the new set A and B aren't nessesarily going to be on the same side of the Y-axis (which is to say, if the first set A is positive Y, then the second isn't nessesarily also going
+# to be positive Y).  However the big oversight i made is that within each set, the nearest wall intersect of each of the 3 lines we test aren't nessesarily going to be on the same side of the Y-axis either.  If the nearest and second nearest points are 
+# about the same distance apart, then the offset in the parentTPs position that it made for the latter two lines can be enough to flip the two nearest points.  The effect of this is that set A could contain two points that are on the same side of the Y-axis, 
+# and one thats on the opposite side, which explains some issues that i was encountering perfectly.  I have updated the code to account for this, which has fixed the observed issues.  
